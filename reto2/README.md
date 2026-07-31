@@ -9,3 +9,5 @@ then use your browser and go to:
 this project was made so that i could understand how docker and django actually work. please ignore the bad frontend.
 
 anyways, the purpose of this project was basically learn how to set up a backend using django, uv, and how to dockerize it.
+
+the captures are in /captures/
