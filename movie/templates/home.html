@@ -38,6 +38,8 @@
                                 <div class="card-body">
                                     <h2 class="h5 fw-bold">{{ movie.title }}</h2>
                                     <p class="text-muted">{{ movie.description }}</p>
+                                    <p class="text-muted">{{ movie.genre }}</p>
+                                    <p class="text-muted">{{ movie.year }}</p>
                                     {% if movie.url %}
                                         <a href="{{ movie.url }}" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer">Ver película</a>
                                     {% endif %}
