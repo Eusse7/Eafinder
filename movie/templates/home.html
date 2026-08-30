@@ -17,14 +17,23 @@
         <button type="submit" class="btn btn-primary">Search</button>
     </form>
     <p>Searching for {{searchTerm}}</p>
+
+    
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
         {% for movie in movies %}
-            <div class="movie">
-                <h3>{{ movie.title }}</h3>
-                <p>{{ movie.description }}</p>
-                <img src="{{ movie.image.url }}" alt="{{ movie.title }}">
-                {% if movie.url %}
-                    <a href="{{ movie.url }}">More info</a>
-                {% endif %}
+            <div class="col">
+                <div class="card">
+                    <img src="{{ movie.image.url }}" class="card-img-top" alt="{{ movie.title }}">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold"> {{ movie.title }} </h5>
+                        <p class="card-text"> {{ movie.description }} </p>
+                        {% if movie.url %}
+                            <a href="{{ movie.url }}" class="btn btn-primary">Movie Link</a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         {% endfor %}
+    </div>
 </div>
