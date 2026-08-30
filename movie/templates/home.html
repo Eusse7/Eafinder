@@ -49,6 +49,31 @@
                     {% endfor %}
                 </div>
             </div>
+            <div class="col-lg-8 mx-auto mt-4">
+                <div class="card border-0 shadow-sm bg-gradient" style="background: linear-gradient(135deg, #eef4ff 0%, #f8f9ff 100%);">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3 bg-primary bg-opacity-10 rounded-circle p-2">
+                                <i class="bi bi-envelope-fill text-primary"></i>
+                            </div>
+                            <div>
+                                <h2 class="h4 fw-bold mb-0">Únete a nuestra lista</h2>
+                                <p class="text-muted mb-0">Recibe novedades y estrenos cada semana.</p>
+                            </div>
+                        </div>
+
+                        <form action="{% url 'signup' %}" class="row g-2 align-items-center">
+                            <div class="col-md-8">
+                                <label for="email" class="visually-hidden">Correo electrónico</label>
+                                <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="Tu correo electrónico" />
+                            </div>
+                            <div class="col-md-4 d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">Suscribirme</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>

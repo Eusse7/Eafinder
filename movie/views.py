@@ -93,3 +93,7 @@ def statistics_view(request):
         'year_graphic': year_graphic,
         'genre_graphic': genre_graphic
     })
+
+def signup(request):
+    email = request.GET.get('email')
+    return render(request, 'signup.html', {'email': email})
