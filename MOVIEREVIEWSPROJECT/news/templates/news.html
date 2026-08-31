@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Noticias de Cine</h2>
+    <div class="row">
+        {% for news in newss %}
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="row g-0">
+                    <div class="col-md-12">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ news.headline }}</h5>
+                            <p class="card-text">{{ news.body }}</p>
+                            <p class="card-text"><small class="text-muted">{{ news.date }}</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

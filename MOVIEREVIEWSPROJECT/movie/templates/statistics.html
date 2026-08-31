@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Estadísticas de Películas</h2>
+    
+    <div class="row">
+        <!-- Gráfica 1: Películas por Año -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Películas por Año</h5>
+                    <img src="{{ graphic1 }}" class="img-fluid" alt="Gráfica de Películas por Año">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráfica 2: Películas por Género -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Películas por Género (Primer Género)</h5>
+                    <img src="{{ graphic2 }}" class="img-fluid" alt="Gráfica de Películas por Género">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
