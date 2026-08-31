@@ -1,11 +1,26 @@
+{% load static %}
 <head>
     <title>Movie Reviews</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            border-radius: 8px;
+            vertical-align: middle;
+        }
+    </style>
 </head>
 
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="{% url 'home' %}">Movies</a>
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+      <video class="brand-icon" autoplay loop muted playsinline disablepictureinpicture aria-hidden="true">
+        <source src="{% static 'images/logo.mp4' %}" type="video/mp4">
+      </video>
+      <span>Movies</span>
+    </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -13,6 +28,9 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="{% url 'news' %}">News</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'statistics' %}">Statistics</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">Login</a>
