@@ -15,7 +15,7 @@
     <p>Searching for {{searchTerm}}</p>
 
     
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="row row-cols-1 row-cols-md-5 g-4">
 
         {% for movie in movies %}
             <div class="col">   
@@ -34,5 +34,16 @@
             </div>
         {% endfor %}
     </div>
+    <br/>
+    <br/>
+    <br/>
+    <h2>Join our mailing list:</h2>
+    <form action="{% url 'signup' %}">
+        <div class="mb-3">
+            <label for="email" class="form-label">Enter your email: </label>
+            <input type="email" id="email" class="form-control" name="email">
+        </div>
+        <button type="submit" class="btn btn-primary">Sign Up</button>
+    </form>
 </div>
 {% endblock %}

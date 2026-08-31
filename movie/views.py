@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -25,6 +26,11 @@ def home(request):
 def about(request):
     # return HttpResponse('<h1>Acerca de Movie Reviews</h1><p>Esta es una aplicación para revisar películas.</p>')
     return render(request, 'about.html')
+
+@require_http_methods(["GET"])
+def signup(request):
+    email = request.GET.get('email')
+    return render(request, 'signup.html', {'email': email})
 
 def get_graphic(counts, title, xlabel, ylabel):
     # Ancho de las barras
