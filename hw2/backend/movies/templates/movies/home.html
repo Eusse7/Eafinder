@@ -1,0 +1,45 @@
+{% extends 'base.html' %} {% block content %}
+
+<div class="container">
+  <form action="">
+    <div class="mb-3">
+      <label for="searchMovie" class="form-label"> Search for Movie: </label>
+      <input type="text" class="form-control" name="searchMovie" />
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+  </form>
+  <p>Searching for {{ searchTerm }}</p>
+
+  <!-- Un card por cada película con sus correspondientes atributos -->
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    <!-- define una fila en una cuadrícula con una columna en pantallas extra pequeñas y tres
+    columnas en pantallas grandes-->
+    {% for movie in movies %}
+    <div class="col">
+      <div class="card h-100">
+        <img
+          src="{{ movie.image.url }}"
+          class="card-img-top"
+          alt="..."
+          style="height: 220px; object-fit: cover"
+        />
+        <div class="card-body">
+          <h5 class="card-title">{{ movie.title }}</h5>
+          <p class="card-text">{{ movie.description|truncatewords:20 }}</p>
+          <p class="card-text">
+            <small class="text-muted"
+              >{{ movie.genre }} &middot; {{ movie.year }}</small
+            >
+          </p>
+          {% if movie.url %}
+          <a href="{{ movie.url }}" class="btn btn-primary">Movie Link</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<br />
+
+{% endblock content %}
