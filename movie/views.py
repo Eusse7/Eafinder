@@ -78,3 +78,7 @@ def generate_bar_chart(data, xlabel, ylabel):
 
 def about(request):
    return render(request, 'about.html', {'name': 'Yesid Hurtado Montoya'})
+
+def signup(request):
+    email = request.GET.get('email') 
+    return render(request, 'signup.html', {'email':email})
