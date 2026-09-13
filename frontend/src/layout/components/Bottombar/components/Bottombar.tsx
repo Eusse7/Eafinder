@@ -18,6 +18,12 @@ export default function Bottombar() {
         <textarea
           ref={textareaRef}
           onInput={() => handleTextareaInput(textareaRef.current, setHasText)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault();
+              event.currentTarget.form?.requestSubmit();
+            }
+          }}
           className="max-h-40 flex-1 resize-none overflow-y-auto outline-none placeholder:text-gray-500 leading-7 placeholder:truncate"
           placeholder="Escribe tu consulta aquí..."
           rows={1}

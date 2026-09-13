@@ -54,7 +54,13 @@ export function useChatScroll({
 
     if (messagesLength > previousMessageCountRef.current) {
       if (shouldAutoScrollRef.current) {
-        container.scrollTop = container.scrollHeight;
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight;
+
+          requestAnimationFrame(() => {
+            container.scrollTop = container.scrollHeight;
+          });
+        });
       }
 
       previousMessageCountRef.current = messagesLength;
