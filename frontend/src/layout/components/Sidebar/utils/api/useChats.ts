@@ -7,5 +7,6 @@ export function useChats() {
     queryKey: ['chats'],
     queryFn: getChats,
     retry: false,
+    refetchInterval: 5000,
   });
 }
