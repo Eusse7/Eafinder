@@ -40,13 +40,13 @@ export default function Layout({ children }: LayoutProps) {
         setSidebarStatus={setSidebarStatus}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar
           sidebarStatus={sidebarStatus}
           setSidebarStatus={setSidebarStatus}
         />
 
-        <main className="min-h-0 flex-1">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
 
         <div className="border-t border-gray-200 bg-indigo-50/80">
           {showLimitToast && (

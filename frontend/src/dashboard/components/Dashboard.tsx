@@ -10,7 +10,7 @@ export default function Dashboard() {
   const currentPage = getCurrentPage(page);
 
   return (
-    <div className="h-full w-full bg-indigo-50/80 overflow-hidden">
+    <div className="h-full w-full overflow-x-hidden bg-indigo-50/80">
       {currentPage === 'welcome' && <Welcome />}
       {currentPage === 'inside-chat' && <InsideChat />}
     </div>
