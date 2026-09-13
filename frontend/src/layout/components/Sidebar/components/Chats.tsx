@@ -8,7 +8,7 @@ import DeleteChatModal from './DeleteChatModal';
 import { useChats } from '../utils/api/useChats';
 
 export default function Chats() {
-  const { data: chats = [], isLoading } = useChats();
+  const { data: chats = [], isLoading, isError } = useChats();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -46,6 +46,10 @@ export default function Chats() {
         <div className="flex flex-col gap-1">
           {isLoading ? (
             <p className="px-2 py-2 text-sm text-gray-400">Cargando...</p>
+          ) : isError ? (
+            <p className="px-2 py-2 text-sm text-red-500">
+              No se pudo conectar al backend
+            </p>
           ) : (
             chats.map((chat) => (
               <div
