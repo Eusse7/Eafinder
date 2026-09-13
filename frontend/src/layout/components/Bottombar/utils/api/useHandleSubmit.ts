@@ -28,6 +28,11 @@ export function useHandleSubmit() {
 
     if (chatId) {
       await sendMessage(chatId, query);
+
+      await queryClient.invalidateQueries({
+        queryKey: ['chat', chatId],
+      });
+
       return;
     }
 
@@ -35,11 +40,9 @@ export function useHandleSubmit() {
 
     await sendMessage(newChatId, query);
 
-    if (location.pathname === '/') {
-      await queryClient.invalidateQueries({
-        queryKey: ['chats'],
-      });
-    }
+    await queryClient.invalidateQueries({
+      queryKey: ['chats'],
+    });
 
     navigate(`/chat/${newChatId}`);
   };
