@@ -1,0 +1,32 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "gitvillegas", email = "villegas.code@proton.me" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.1.1",
+    "django-cors-headers>=4.9.0",
+    "django-environ>=0.14.0",
+    "django-types>=0.24.0",
+    "djangorestframework>=3.18.1",
+    "httpx>=0.28.1",
+    "pypdf>=6.1.1",
+    "python-docx>=1.2.0",
+]
+
+[project.scripts]
+backend = "backend:main"
+
+[build-system]
+requires = ["uv_build>=0.12.11,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.7",
+    "ty>=0.0.80",
+]
