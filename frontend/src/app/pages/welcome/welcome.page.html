@@ -1,0 +1,57 @@
+<section class="welcome">
+  <header class="welcome-header">
+    <div class="logo-card">
+      <span class="logo-text">EAFIT</span>
+      <span
+        class="logo-status"
+        [class.logo-status-offline]="!store.backendOnline()"
+        [title]="store.backendOnline() ? 'Backend conectado' : 'Backend desconectado'"
+      ></span>
+    </div>
+
+    <h1>Hola, soy EAFinder</h1>
+    <h2>
+      Tu guía sobre el Reglamento Académico de la Universidad EAFIT.
+      ¿En qué puedo ayudarte hoy?
+    </h2>
+  </header>
+
+  @if (!store.backendOnline()) {
+    <p class="banner banner-error">
+      No se pudo conectar con el backend. Verifica que Django esté corriendo en
+      <code>http://localhost:8000</code>.
+    </p>
+  } @else if (store.knowledgeBaseEmpty()) {
+    <p class="banner banner-warning">
+      Todavía no hay documentos indexados. Un administrador debe cargar el
+      reglamento con <code>manage.py ingest_document</code>.
+    </p>
+  }
+
+  <div class="cards">
+    @for (item of suggestions; track item.title) {
+      <button type="button" class="card" (click)="ask(item.prompt)" [disabled]="store.sending()">
+        <span class="card-icon">{{ item.icon }}</span>
+
+        <span class="card-body">
+          <span class="card-title">{{ item.title }}</span>
+          <span class="card-description">{{ item.description }}</span>
+        </span>
+
+        <span class="card-chevron">›</span>
+      </button>
+    }
+  </div>
+
+  <p class="welcome-note">O escribe directamente en el campo de texto de abajo</p>
+
+  <nav class="links" aria-label="Portales institucionales">
+    <span class="links-title">Portales institucionales</span>
+
+    @for (link of links; track link.url) {
+      <a class="link-chip" [href]="link.url" target="_blank" rel="noopener">
+        {{ link.label }}
+      </a>
+    }
+  </nav>
+</section>

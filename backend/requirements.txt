@@ -1,0 +1,21 @@
+# Dependencias del backend de EAFinder.
+#
+# Instalar dentro de un entorno virtual:
+#     python -m venv .venv
+#     .venv\Scripts\activate        (Windows)
+#     source .venv/bin/activate     (macOS / Linux)
+#     pip install -r requirements.txt
+#
+# Requiere Python 3.12 o superior (lo exige Django 6.1).
+
+Django==6.1.1
+djangorestframework==3.18.1
+django-cors-headers==4.9.0
+django-environ==0.14.0
+
+# Cliente HTTP para hablar con el proveedor de IA
+httpx==0.28.1
+
+# Extracción de texto de los documentos institucionales
+pypdf==6.18.1
+python-docx==1.2.0

@@ -1,0 +1,19 @@
+<div class="shell">
+  <app-sidebar [open]="sidebarOpen" (closed)="closeSidebar()" />
+
+  <div class="main-column">
+    <app-topbar (menuClick)="toggleSidebar()" />
+
+    <main class="content">
+      <router-outlet />
+    </main>
+
+    <div class="composer-area">
+      @if (store.toast(); as toast) {
+        <div class="toast" role="alert">{{ toast }}</div>
+      }
+
+      <app-composer />
+    </div>
+  </div>
+</div>

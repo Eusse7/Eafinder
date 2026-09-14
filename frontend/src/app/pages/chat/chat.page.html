@@ -1,0 +1,55 @@
+<div class="chat" #scroller>
+  <div class="chat-inner">
+    @if (store.loadingMessages() && store.messages().length === 0) {
+      <p class="muted center">Cargando conversación…</p>
+    }
+
+    @for (message of store.messages(); track message.id) {
+      @if (message.role === 'user') {
+        <div class="row row-end">
+          <div class="bubble bubble-user">
+            <p>{{ message.content }}</p>
+            <span class="bubble-time">{{ message.created_at | date: 'shortTime' }}</span>
+          </div>
+        </div>
+      } @else {
+        <div class="row row-start">
+          <div class="avatar">✦</div>
+
+          <div class="bubble bubble-assistant">
+            <p class="bubble-text">{{ message.content }}</p>
+
+            @if (message.sources.length > 0) {
+              <div class="sources">
+                <span class="sources-title">Fuentes</span>
+
+                @for (source of message.sources; track source.id) {
+                  <button type="button" class="source-chip" (click)="toggleSource(source.id)">
+                    {{ source.label }}
+                  </button>
+
+                  @if (openSource === source.id) {
+                    <blockquote class="source-excerpt">{{ source.excerpt }}</blockquote>
+                  }
+                }
+              </div>
+            }
+
+            <span class="bubble-time">{{ message.created_at | date: 'shortTime' }}</span>
+          </div>
+        </div>
+      }
+    }
+
+    @if (store.sending()) {
+      <div class="row row-start">
+        <div class="avatar">✦</div>
+
+        <div class="bubble bubble-assistant typing" aria-live="polite">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="typing-text">Consultando el reglamento…</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>
