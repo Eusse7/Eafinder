@@ -25,6 +25,7 @@ urlpatterns = [
     path('', movieViews.home, name='home'),
     path('about/', movieViews.about, name='about'),
     path('statistics/', movieViews.statistics, name='statistics'),
+    path('recommendation/', movieViews.recommendation, name='recommendation'),
     path('news/', include('news.urls')),
 ]
 

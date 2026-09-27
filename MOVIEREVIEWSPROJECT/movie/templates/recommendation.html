@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Sistema de Recomendación de Películas</h2>
+    <form method="GET" action="">
+        <div class="mb-3">
+            <label for="prompt" class="form-label">¿Qué tipo de película quieres ver hoy?</label>
+            <input type="text" class="form-control" id="prompt" name="prompt" value="{{ prompt|default_if_none:'' }}" placeholder="Ej: película sobre la segunda guerra mundial" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Buscar Recomendación</button>
+    </form>
+
+    {% if prompt %}
+    <div class="mt-5">
+        <h4>Película recomendada para: <i>"{{ prompt }}"</i></h4>
+        {% if best_movie %}
+        <div class="card mt-3" style="width: 18rem;">
+            {% if best_movie.image %}
+            <img src="{{ best_movie.image.url }}" class="card-img-top" alt="{{ best_movie.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ best_movie.title }}</h5>
+                <p class="card-text">{{ best_movie.description }}</p>
+                <p class="card-text"><small class="text-muted">Genre: {{ best_movie.genre }} | Year: {{ best_movie.year }}</small></p>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-danger mt-3">No se encontraron películas en la base de datos.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

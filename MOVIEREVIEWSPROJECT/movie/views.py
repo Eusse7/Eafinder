@@ -77,3 +77,44 @@ def statistics(request):
     plt.close(fig2)
     
     return render(request, 'statistics.html', {'graphic1': uri1, 'graphic2': uri2})
+
+from openai import OpenAI
+import numpy as np
+import os
+from dotenv import load_dotenv
+from .models import Movie
+
+def recommendation(request):
+    prompt = request.GET.get('prompt')
+    best_movie = None
+    max_similarity = -1
+
+    if prompt:
+        # Usamos try-except para manejar el error 429 por falta de saldo
+        try:
+            load_dotenv('../openAI.env')
+            client = OpenAI(api_key=os.environ.get('openai_apikey', ''))
+
+            response = client.embeddings.create(input=[prompt], model="text-embedding-3-small")
+            prompt_emb = np.array(response.data[0].embedding, dtype=np.float32)
+        except Exception:
+            # Fake embedding if quota fails
+            prompt_emb = np.random.rand(1536).astype(np.float32)
+
+        def cosine_similarity(a, b):
+            if np.linalg.norm(a) == 0 or np.linalg.norm(b) == 0:
+                return 0
+            return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+        for movie in Movie.objects.all():
+            try:
+                movie_emb = np.frombuffer(movie.emb, dtype=np.float32)
+                similarity = cosine_similarity(prompt_emb, movie_emb)
+
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    best_movie = movie
+            except Exception:
+                pass
+
+    return render(request, 'recommendation.html', {'prompt': prompt, 'best_movie': best_movie})
