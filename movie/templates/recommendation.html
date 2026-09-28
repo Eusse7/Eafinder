@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recomendaciones</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .result {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        .result img {
+            max-width: 300px;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .similarity {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🎬 Recomendador de películas</h1>
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        <label for="prompt">
+            ¿Qué tipo de película estás buscando?
+        </label>
+
+        <br><br>
+
+        <textarea
+            id="prompt"
+            name="prompt"
+            placeholder="Ejemplo: una película de ciencia ficción sobre viajes espaciales y supervivencia"
+        >{{ prompt }}</textarea>
+
+        <br>
+
+        <button type="submit">
+            🔎 Buscar recomendación
+        </button>
+
+    </form>
+
+
+    {% if recommendation %}
+
+        <div class="result">
+
+            <h2>🎯 Película recomendada</h2>
+
+            <h3>{{ recommendation.title }}</h3>
+
+            {% if recommendation.image %}
+                <img
+                    src="{{ recommendation.image.url }}"
+                    alt="{{ recommendation.title }}"
+                >
+            {% endif %}
+
+            <p>
+                {{ recommendation.description }}
+            </p>
+
+            <p class="similarity">
+                Similitud:
+                {{ similarity|floatformat:4 }}
+            </p>
+
+        </div>
+
+    {% elif prompt %}
+
+        <div class="result">
+            <p>
+                No se encontró una película con un embedding compatible.
+            </p>
+        </div>
+
+    {% endif %}
+
+</body>
+</html>

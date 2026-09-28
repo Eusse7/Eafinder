@@ -2,3 +2,7 @@ django
 Pillow
 pandas
 matplotlib
+numpy
+requests
+python-dotenv
+google-generativeai

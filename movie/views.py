@@ -7,6 +7,13 @@ import matplotlib.pyplot as plt
 import matplotlib
 import io
 import urllib, base64
+import os
+import numpy as np
+
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
+from movie.models import Movie
 # Create your views here.
 
 def home(request):
@@ -82,3 +89,89 @@ def about(request):
 def signup(request):
     email = request.GET.get('email') 
     return render(request, 'signup.html', {'email':email})
+
+def movie_recommendation(request):
+
+    recommendation = None
+    similarity_value = None
+    prompt = ""
+
+    if request.method == "POST":
+
+        prompt = request.POST.get("prompt", "").strip()
+
+        if prompt:
+
+            load_dotenv()
+
+            api_key = os.getenv("gemini_api")
+
+            client = genai.Client(api_key=api_key)
+
+            # Generar embedding del texto escrito por el usuario
+            result = client.models.embed_content(
+                model="gemini-embedding-2",
+                contents=prompt,
+                config=types.EmbedContentConfig(
+                    output_dimensionality=768
+                )
+            )
+
+            prompt_emb = np.array(
+                result.embeddings[0].values,
+                dtype=np.float32
+            )
+
+            # Función para calcular similitud coseno
+            def cosine_similarity(a, b):
+
+                denominator = (
+                    np.linalg.norm(a) *
+                    np.linalg.norm(b)
+                )
+
+                if denominator == 0:
+                    return 0.0
+
+                return np.dot(a, b) / denominator
+
+            best_movie = None
+            max_similarity = -1
+
+            # Comparar contra todas las películas
+            for movie in Movie.objects.all():
+
+                if not movie.emb:
+                    continue
+
+                movie_emb = np.frombuffer(
+                    movie.emb,
+                    dtype=np.float32
+                )
+
+                # Evitar comparar embeddings de dimensiones diferentes
+                if len(movie_emb) != len(prompt_emb):
+                    continue
+
+                similarity = cosine_similarity(
+                    prompt_emb,
+                    movie_emb
+                )
+
+                if similarity > max_similarity:
+
+                    max_similarity = similarity
+                    best_movie = movie
+
+            recommendation = best_movie
+            similarity_value = max_similarity
+
+    return render(
+        request,
+        "recommendation.html",
+        {
+            "recommendation": recommendation,
+            "similarity": similarity_value,
+            "prompt": prompt,
+        }
+    )
