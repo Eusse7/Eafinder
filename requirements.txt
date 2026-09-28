@@ -2,3 +2,9 @@ django
 pillow
 pandas
 matplotlib
+google-genai
+openai
+huggingface_hub
+python-dotenv
+numpy
+requests
