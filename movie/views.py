@@ -1,9 +1,16 @@
+import os
+
 from django.shortcuts import render
 from django.http import HttpResponse
 import matplotlib.pyplot as plt
 import matplotlib
 import io
 import urllib, base64
+from pathlib import Path
+
+import numpy as np
+from dotenv import load_dotenv
+from google import genai
 
 from .models import Movie
 
@@ -97,3 +104,65 @@ def statistics_view(request):
 def signup(request):
     email = request.GET.get('email')
     return render(request, 'signup.html', {'email': email})
+
+
+def recommendation(request):
+    context = {'prompt': ''}
+
+    if request.method != 'POST':
+        return render(request, 'recommendation.html', context)
+
+    prompt = request.POST.get('prompt', '').strip()
+    context['prompt'] = prompt
+
+    if not prompt:
+        context['error'] = 'Escribe una descripción para buscar una película.'
+        return render(request, 'recommendation.html', context)
+
+    movies = list(Movie.objects.exclude(description=''))
+    if not movies:
+        context['error'] = 'No hay películas con descripción en la base de datos.'
+        return render(request, 'recommendation.html', context)
+
+    try:
+        base_dir = Path(__file__).resolve().parent.parent
+        load_dotenv(base_dir / 'gemini.env')
+        api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('gemini_apikey')
+        if not api_key:
+            raise RuntimeError('No se encontró la API key de Gemini en gemini.env.')
+
+        client = genai.Client(api_key=api_key)
+        prompt_response = client.models.embed_content(
+            model='gemini-embedding-001',
+            contents=prompt,
+        )
+        prompt_embedding = np.asarray(prompt_response.embeddings[0].values, dtype=np.float32)
+        prompt_norm = np.linalg.norm(prompt_embedding)
+        similarities = []
+
+        for movie in movies:
+            if not movie.emb:
+                continue
+
+            movie_embedding = np.frombuffer(movie.emb, dtype=np.float32)
+            if movie_embedding.shape != prompt_embedding.shape:
+                continue
+
+            movie_norm = np.linalg.norm(movie_embedding)
+            similarity = 0.0 if prompt_norm == 0 or movie_norm == 0 else np.dot(
+                prompt_embedding, movie_embedding
+            ) / (prompt_norm * movie_norm)
+            similarities.append((similarity, movie))
+
+        if not similarities:
+            raise RuntimeError(
+                'No hay embeddings almacenados compatibles con gemini-embedding-001.'
+            )
+
+        best_similarity, recommended_movie = max(similarities, key=lambda item: item[0])
+        context['recommended_movie'] = recommended_movie
+        context['similarity'] = best_similarity
+    except Exception as error:
+        context['error'] = f'No se pudo generar la recomendación: {error}'
+
+    return render(request, 'recommendation.html', context)

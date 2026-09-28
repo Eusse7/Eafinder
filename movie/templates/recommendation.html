@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-md-5">
+                    <p class="text-uppercase text-primary fw-semibold small mb-2">Recomendador inteligente</p>
+                    <h1 class="display-6 fw-bold mb-3">Encuentra tu próxima película</h1>
+                    <p class="text-muted mb-4">Describe el tipo de historia, ambiente o tema que quieres ver.</p>
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <label for="prompt" class="form-label fw-semibold">¿Qué película te gustaría encontrar?</label>
+                        <textarea class="form-control mb-3" id="prompt" name="prompt" rows="4" placeholder="Ejemplo: una aventura espacial con misterio y amistad" required>{{ prompt }}</textarea>
+                        <button type="submit" class="btn btn-primary px-4">Recomendar película</button>
+                    </form>
+                </div>
+            </div>
+
+            {% if error %}
+                <div class="alert alert-danger mt-4" role="alert">{{ error }}</div>
+            {% endif %}
+
+            {% if recommended_movie %}
+                <div class="card border-0 shadow-sm mt-4 overflow-hidden">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="{{ recommended_movie.image.url }}" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 250px;" alt="{{ recommended_movie.title }}">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body p-4">
+                                <p class="text-uppercase text-success fw-semibold small mb-2">Película recomendada</p>
+                                <h2 class="h3 fw-bold">{{ recommended_movie.title }}</h2>
+                                <p class="text-muted">{{ recommended_movie.description }}</p>
+                                {% if recommended_movie.genre %}<p class="mb-1"><strong>Género:</strong> {{ recommended_movie.genre }}</p>{% endif %}
+                                {% if recommended_movie.year %}<p class="mb-2"><strong>Año:</strong> {{ recommended_movie.year }}</p>{% endif %}
+                                <p class="text-muted small mb-0">Similitud: {{ similarity|floatformat:4 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
