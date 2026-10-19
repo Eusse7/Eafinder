@@ -434,11 +434,23 @@ code {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 150px;
-  height: 66px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: 0 2px 16px rgba(15, 23, 42, 0.15);
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.logo-img {
+  display: block;
+  height: 88px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 18px rgba(23, 37, 84, 0.12));
+  transition: transform 0.2s ease;
+}
+
+.logo-img:hover {
+  transform: translateY(-2px);
 }
 
 .logo-text {
@@ -450,13 +462,23 @@ code {
 
 .logo-status {
   position: absolute;
-  right: -5px;
-  bottom: -5px;
-  width: 16px;
-  height: 16px;
+  right: -6px;
+  bottom: 0px;
+  width: 15px;
+  height: 15px;
   border: 3px solid var(--background);
   border-radius: 50%;
   background: #16a34a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+
+.sidebar-logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  background: transparent;
+  box-shadow: none;
 }
 
 .logo-status-offline {

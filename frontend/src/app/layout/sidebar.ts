@@ -15,7 +15,7 @@ import { ChatSummary } from '../core/models';
     <aside class="sidebar" [class.sidebar-open]="open">
       <div class="sidebar-inner">
         <div class="sidebar-header">
-          <span class="brand-mark">EAFIT</span>
+          <img src="eafinder-crest.png" alt="Logo EAFinder" class="sidebar-logo" />
           <span class="brand-name">EAFinder</span>
 
           <button type="button" class="icon-button sidebar-close" (click)="closed.emit()">

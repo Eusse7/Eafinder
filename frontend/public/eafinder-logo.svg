@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160" width="400" height="160">
+  <defs>
+    <filter id="card-shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Card -->
+  <rect x="20" y="30" width="160" height="80" rx="14" fill="#ffffff" filter="url(#card-shadow)"/>
+
+  <!-- EAFIT Text in Navy -->
+  <text x="100" y="80" font-family="'Segoe UI', -apple-system, sans-serif" font-size="28" font-weight="800" fill="#172554" text-anchor="middle" letter-spacing="3">EAFIT</text>
+
+  <!-- Online Status Indicator (Green Dot) -->
+  <circle cx="175" cy="105" r="8" fill="#16a34a" stroke="#eef2ff" stroke-width="3"/>
+
+  <!-- EAFinder Branding Text -->
+  <text x="210" y="72" font-family="'Segoe UI', -apple-system, sans-serif" font-size="34" font-weight="700" fill="#172554">EA<tspan fill="#2563eb">Finder</tspan></text>
+  <text x="212" y="98" font-family="'Segoe UI', -apple-system, sans-serif" font-size="13" font-weight="500" fill="#64748b" letter-spacing="1">ASISTENTE ACADÉMICO</text>
+</svg>
