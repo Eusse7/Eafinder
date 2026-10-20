@@ -148,6 +148,7 @@ se sustituyen por dobles de prueba, así que corren sin clave y sin costo.
 | US02 | Entrenamiento y actualización de la base de conocimiento | `knowledge/management/commands/ingest_document.py`, `knowledge/admin.py` |
 | US03 | Acceso mediante interfaz centralizada | `frontend/src/app/pages/welcome/` |
 | US04 | Consulta de trámites del Reglamento Académico | prompt del sistema en `rag.py` |
+| US06 | Interfaz de chat responsiva para móvil, tableta y escritorio | `frontend/src/styles.css`, componentes de `layout/` y páginas |
 | US08 | Procesamiento de consultas en lenguaje natural | `knowledge/services/retriever.py` |
 | US09 | Citación de fuentes institucionales | modelo `MessageSource`, chips de fuente en el chat |
 | US10 | Control de alucinación | umbral `RAG_MIN_RELEVANCE` en `rag.py` |

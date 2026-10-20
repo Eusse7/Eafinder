@@ -21,17 +21,26 @@
 
             @if (message.sources.length > 0) {
               <div class="sources">
-                <span class="sources-title">Fuentes</span>
+                <span class="sources-title">Fuentes citadas</span>
 
-                @for (source of message.sources; track source.id) {
-                  <button type="button" class="source-chip" (click)="toggleSource(source.id)">
-                    {{ source.label }}
-                  </button>
+                <div class="source-chips">
+                  @for (source of message.sources; track source.id) {
+                    <div class="source-item">
+                      <button
+                        type="button"
+                        class="source-chip"
+                        (click)="toggleSource(source.id)"
+                        [attr.aria-expanded]="openSource === source.id"
+                      >
+                        {{ source.label }}
+                      </button>
 
-                  @if (openSource === source.id) {
-                    <blockquote class="source-excerpt">{{ source.excerpt }}</blockquote>
+                      @if (openSource === source.id) {
+                        <blockquote class="source-excerpt">{{ source.excerpt }}</blockquote>
+                      }
+                    </div>
                   }
-                }
+                </div>
               </div>
             }
 

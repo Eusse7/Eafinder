@@ -18,12 +18,17 @@ import { ChatSummary } from '../core/models';
           <img src="eafinder-crest.png" alt="Logo EAFinder" class="sidebar-logo" />
           <span class="brand-name">EAFinder</span>
 
-          <button type="button" class="icon-button sidebar-close" (click)="closed.emit()">
+          <button
+            type="button"
+            class="icon-button sidebar-close"
+            (click)="closed.emit()"
+            aria-label="Cerrar barra lateral"
+          >
             ✕
           </button>
         </div>
 
-        <button type="button" class="new-chat" (click)="onNewChat()">
+        <button type="button" class="new-chat" (click)="onNewChat()" aria-label="Iniciar nueva conversación">
           + Nueva conversación
         </button>
 
@@ -93,9 +98,9 @@ export class Sidebar {
   protected chatToDelete: ChatSummary | null = null;
   protected deleting = false;
 
-  /** En móvil la barra lateral se cierra al navegar; en escritorio se queda. */
+  /** En móvil y tableta la barra lateral se cierra al navegar; en escritorio amplio se queda. */
   onOpenChat(): void {
-    if (window.innerWidth < 640) {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       this.closed.emit();
     }
   }
