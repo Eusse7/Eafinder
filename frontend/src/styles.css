@@ -991,6 +991,60 @@ code {
   line-height: 1.5;
 }
 
+/* --- Valoración de respuestas (US15) ------------------------------------- */
+
+.feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.feedback-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  line-height: 1;
+  font-size: 14px;
+  padding: 4px 9px;
+  opacity: 0.65;
+  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.feedback-btn:hover {
+  opacity: 1;
+  border-color: var(--navy-soft);
+}
+
+.feedback-active {
+  opacity: 1;
+  border-color: var(--primary);
+  background: var(--background);
+}
+
+.feedback-thanks {
+  margin-left: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* --- Aviso de moderación (US20) ------------------------------------------ */
+
+.bubble-moderated {
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+}
+
+.moderated-tag {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: var(--warning);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* --- Indicador de procesamiento (US07) ----------------------------------- */
 
 .typing {

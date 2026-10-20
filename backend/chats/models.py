@@ -21,6 +21,12 @@ class Message(models.Model):
         USER = "user", "User"
         ASSISTANT = "assistant", "Assistant"
 
+    class Feedback(models.TextChoices):
+        """Valoración del usuario sobre una respuesta del asistente (US15)."""
+
+        UP = "up", "Útil"
+        DOWN = "down", "No útil"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     chat = models.ForeignKey(
         Chat,
@@ -30,6 +36,17 @@ class Message(models.Model):
     role = models.CharField(max_length=20, choices=Role.choices)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    # US15: pulgar arriba/abajo. Vacío = el usuario aún no valoró la respuesta.
+    # Solo tiene sentido en mensajes del asistente.
+    feedback = models.CharField(
+        max_length=4,
+        choices=Feedback.choices,
+        blank=True,
+        default="",
+    )
+    # US20: True cuando la respuesta la generó el filtro de moderación de
+    # contenido sensible, no el pipeline RAG.
+    moderated = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.role}: {self.content[:50]}"

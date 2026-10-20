@@ -8,11 +8,17 @@ export interface Source {
   excerpt: string;
 }
 
+export type Feedback = 'up' | 'down' | '';
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   created_at: string;
+  /** US15: valoración del usuario sobre la respuesta ('' = sin valorar). */
+  feedback: Feedback;
+  /** US20: respuesta generada por el filtro de moderación. */
+  moderated: boolean;
   sources: Source[];
 }
 

@@ -127,6 +127,60 @@ class RagTests(TestCase):
 
         self.assertFalse(answer.grounded)
 
+    def test_contenido_sensible_corta_antes_de_recuperar(self):
+        """US20: el filtro responde sin tocar retriever ni el modelo."""
+        with (
+            patch("knowledge.services.rag.retrieve") as retrieve,
+            patch("knowledge.services.rag.generate_answer") as generate,
+        ):
+            answer = rag.answer_question("eres un estúpido inútil")
+
+        retrieve.assert_not_called()
+        generate.assert_not_called()
+        self.assertTrue(answer.moderated)
+        self.assertFalse(answer.grounded)
+
+
+class ModerationTests(TestCase):
+    """US20: clasificación local de contenido sensible."""
+
+    def test_pregunta_legitima_pasa(self):
+        from knowledge.services.moderation import moderate
+
+        resultado = moderate("¿Cómo funciona la homologación de materias?")
+
+        self.assertFalse(resultado.flagged)
+
+    def test_autolesion_se_detecta_y_deriva_a_ayuda(self):
+        from knowledge.services.moderation import Category, moderate
+
+        resultado = moderate("ya no quiero vivir")
+
+        self.assertTrue(resultado.flagged)
+        self.assertEqual(resultado.category, Category.SELF_HARM)
+        self.assertIn("106", resultado.message)
+
+    def test_insultos_se_detectan(self):
+        from knowledge.services.moderation import Category, moderate
+
+        resultado = moderate("eres un imbécil")
+
+        self.assertTrue(resultado.flagged)
+        self.assertEqual(resultado.category, Category.HATE)
+
+    def test_insensible_a_tildes_y_mayusculas(self):
+        from knowledge.services.moderation import moderate
+
+        # Mayúsculas y tildes no deben evadir el filtro.
+        self.assertTrue(moderate("QUIERO SUICIDARME").flagged)
+        self.assertTrue(moderate("autolesión").flagged)
+
+    def test_no_marca_palabras_legitimas_que_contienen_subcadenas(self):
+        from knowledge.services.moderation import moderate
+
+        # "rematar" contiene "matar" pero no debe marcarse.
+        self.assertFalse(moderate("¿puedo rematar el semestre?").flagged)
+
 
 class IngestCommandTests(TestCase):
     """El parser del comando se construye sin chocar con las opciones de Django.

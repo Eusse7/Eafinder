@@ -19,6 +19,6 @@ class ChatAdmin(admin.ModelAdmin):
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ("role", "content", "chat", "created_at")
-    list_filter = ("role",)
+    list_display = ("role", "content", "chat", "feedback", "moderated", "created_at")
+    list_filter = ("role", "feedback", "moderated")
     inlines = [MessageSourceInline]

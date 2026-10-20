@@ -88,3 +88,113 @@ class ChatApiTests(TestCase):
 
         self.assertEqual(response.status_code, 204)
         self.assertFalse(Chat.objects.filter(id=chat_id).exists())
+
+    # US15: valoración de respuestas ---------------------------------------
+
+    def _mensaje_del_asistente(self, chat_id):
+        with patch(
+            "chats.views.answer_question",
+            return_value=Answer(content="Respuesta de prueba.", grounded=True),
+        ):
+            response = self.client.post(
+                f"/api/chats/{chat_id}/messages/",
+                {"content": "¿Cómo cancelo una materia?"},
+                content_type="application/json",
+            )
+        return response.json()["assistant_message"]["id"]
+
+    def test_feedback_up_se_guarda(self):
+        chat_id = self.crear_chat()
+        message_id = self._mensaje_del_asistente(chat_id)
+
+        response = self.client.patch(
+            f"/api/chats/{chat_id}/messages/{message_id}/feedback/",
+            {"feedback": "up"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["feedback"], "up")
+        self.assertEqual(Message.objects.get(id=message_id).feedback, "up")
+
+    def test_feedback_vacio_quita_la_valoracion(self):
+        chat_id = self.crear_chat()
+        message_id = self._mensaje_del_asistente(chat_id)
+
+        self.client.patch(
+            f"/api/chats/{chat_id}/messages/{message_id}/feedback/",
+            {"feedback": "down"},
+            content_type="application/json",
+        )
+        response = self.client.patch(
+            f"/api/chats/{chat_id}/messages/{message_id}/feedback/",
+            {"feedback": ""},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Message.objects.get(id=message_id).feedback, "")
+
+    def test_feedback_invalido_es_rechazado(self):
+        chat_id = self.crear_chat()
+        message_id = self._mensaje_del_asistente(chat_id)
+
+        response = self.client.patch(
+            f"/api/chats/{chat_id}/messages/{message_id}/feedback/",
+            {"feedback": "amazing"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_no_se_puede_valorar_un_mensaje_del_usuario(self):
+        chat_id = self.crear_chat()
+        chat = Chat.objects.get(id=chat_id)
+        user_message = Message.objects.create(
+            chat=chat, role=Message.Role.USER, content="hola"
+        )
+
+        response = self.client.patch(
+            f"/api/chats/{chat_id}/messages/{user_message.id}/feedback/",
+            {"feedback": "up"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    # US20: filtro de moderación en el pipeline ----------------------------
+
+    def test_pregunta_sensible_no_llama_al_pipeline(self):
+        """Una pregunta sensible se corta en moderación, antes del RAG.
+
+        No se mockea answer_question: corre el pipeline real. El filtro de
+        moderación responde antes de retrieve(), así que no se llama al
+        proveedor de IA ni se necesita clave.
+        """
+        chat_id = self.crear_chat()
+
+        response = self.client.post(
+            f"/api/chats/{chat_id}/messages/",
+            {"content": "quiero suicidarme"},
+            content_type="application/json",
+        )
+
+        body = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body["assistant_message"]["moderated"])
+        self.assertIn("106", body["assistant_message"]["content"])
+
+    def test_pregunta_normal_no_se_marca_como_moderada(self):
+        chat_id = self.crear_chat()
+
+        with patch(
+            "chats.views.answer_question",
+            return_value=Answer(content="Respuesta normal.", grounded=True),
+        ):
+            response = self.client.post(
+                f"/api/chats/{chat_id}/messages/",
+                {"content": "¿Cómo me matriculo?"},
+                content_type="application/json",
+            )
+
+        self.assertFalse(response.json()["assistant_message"]["moderated"])

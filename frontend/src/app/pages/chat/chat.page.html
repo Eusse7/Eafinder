@@ -16,7 +16,14 @@
         <div class="row row-start">
           <div class="avatar">✦</div>
 
-          <div class="bubble bubble-assistant">
+          <div
+            class="bubble bubble-assistant"
+            [class.bubble-moderated]="message.moderated"
+          >
+            @if (message.moderated) {
+              <span class="moderated-tag">⚠️ Aviso de seguridad</span>
+            }
+
             <p class="bubble-text">{{ message.content }}</p>
 
             @if (message.sources.length > 0) {
@@ -41,6 +48,35 @@
                     </div>
                   }
                 </div>
+              </div>
+            }
+
+            @if (!message.moderated && !isTemp(message.id)) {
+              <div class="feedback" aria-label="¿Te fue útil esta respuesta?">
+                <button
+                  type="button"
+                  class="feedback-btn"
+                  [class.feedback-active]="message.feedback === 'up'"
+                  [attr.aria-pressed]="message.feedback === 'up'"
+                  title="Respuesta útil"
+                  (click)="store.sendFeedback(message.id, 'up')"
+                >
+                  👍
+                </button>
+                <button
+                  type="button"
+                  class="feedback-btn"
+                  [class.feedback-active]="message.feedback === 'down'"
+                  [attr.aria-pressed]="message.feedback === 'down'"
+                  title="Respuesta no útil"
+                  (click)="store.sendFeedback(message.id, 'down')"
+                >
+                  👎
+                </button>
+
+                @if (message.feedback) {
+                  <span class="feedback-thanks">¡Gracias por tu valoración!</span>
+                }
               </div>
             }
 
