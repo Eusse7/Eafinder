@@ -376,3 +376,66 @@ class KnowledgeGapTests(TestCase):
         self.assertEqual(top_gap["count"], 2)
         self.assertTrue(top_gap["is_recurring"])
 
+
+class DocumentAdminUploadTests(TestCase):
+    """US12: Carga de nuevos reglamentos desde la interfaz web."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        self.admin_user = User.objects.create_superuser(
+            username="admin_user", password="adminpassword", email="admin@eafit.edu.co"
+        )
+        self.client.login(username="admin_user", password="adminpassword")
+
+    def test_upload_view_get_renderiza_formulario(self):
+        response = self.client.get("/admin/knowledge/document/upload/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Carga de Nuevos Reglamentos (US12)")
+        self.assertContains(response, 'type="file"')
+
+    def test_upload_archivo_invalido_es_rechazado(self):
+        """Escenario 2 de US12: si no cumple formato, se rechaza y se informa el motivo."""
+        from io import BytesIO
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        invalido = SimpleUploadedFile("virus.exe", b"binary content", content_type="application/octet-stream")
+
+        response = self.client.post(
+            "/admin/knowledge/document/upload/",
+            {
+                "file": invalido,
+                "title": "Reglamento No Válido",
+                "version": "2026-1",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Formato no permitido")
+
+    def test_upload_archivo_valido_procesa_e_indexa(self):
+        """Escenario 1 de US12: documento permitido se valida, procesa e incorpora."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from knowledge.models import Document
+
+        contenido = b"Articulo 1. Admisiones.\nEl proceso es semestral."
+        archivo = SimpleUploadedFile("reglamento.txt", contenido, content_type="text/plain")
+
+        with patch("knowledge.services.indexer.embed_texts", return_value=[[1.0, 0.0, 0.0]]):
+            response = self.client.post(
+                "/admin/knowledge/document/upload/",
+                {
+                    "file": archivo,
+                    "title": "Reglamento de Admisiones",
+                    "version": "2026-1",
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)  # Redirige a changelist al completar
+        doc = Document.objects.filter(title="Reglamento de Admisiones").first()
+        self.assertIsNotNone(doc)
+        self.assertEqual(doc.version, "2026-1")
+        self.assertTrue(doc.is_active)
+        self.assertEqual(doc.chunks.count(), 1)
+
+

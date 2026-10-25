@@ -22,6 +22,23 @@
   --sidebar-width: 280px;
 }
 
+/* ==========================================================================
+   US19: Definición de tokens para Modo Oscuro
+   Paleta nocturna profunda inspirada en Navy/Slate con contraste WCAG AAA
+   ========================================================================== */
+[data-theme="dark"] {
+  --navy: #3b82f6;
+  --navy-soft: #60a5fa;
+  --primary: #3b82f6;
+  --background: #0b0f19;
+  --surface: #131b2e;
+  --border: #1e293b;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -180,8 +197,14 @@ code {
   flex-shrink: 0;
 }
 
-.status-offline {
+.topbar-actions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-offline {
   color: var(--danger);
   font-size: 12px;
   font-weight: 500;
@@ -198,6 +221,45 @@ code {
 
 .offline-full {
   display: inline;
+}
+
+.theme-toggle-btn {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-muted);
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--background);
+  transform: rotate(15deg) scale(1.05);
+}
+
+.theme-icon {
+  width: 19px;
+  height: 19px;
+  display: block;
+}
+
+.sun-icon {
+  color: #f59e0b;
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5));
+}
+
+.moon-icon {
+  color: #475569;
 }
 
 /* Botones con área táctil cómoda (mínimo 40-44px) */
@@ -1803,3 +1865,356 @@ code {
     gap: 12px;
   }
 }
+
+/* ==========================================================================
+   US19: Estilos específicos para Modo Oscuro y Selector de Tema
+   ========================================================================== */
+
+/* Transición suave al alternar temas */
+body,
+.shell,
+.sidebar,
+.topbar,
+.composer-area,
+.composer-box,
+.bubble,
+.card,
+.new-chat,
+.icon-button {
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Selector en pie de barra lateral */
+.sidebar-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.theme-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.theme-pill-btn {
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background: var(--background);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+}
+
+.theme-pill-btn:hover {
+  border-color: var(--primary);
+  transform: scale(1.02);
+}
+
+.theme-pill-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Reglas aplicadas cuando el tema es oscuro [data-theme="dark"] */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .topbar {
+  background: rgba(11, 15, 25, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #60a5fa;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .theme-pill-btn {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .theme-pill-btn:hover {
+  background: #25334d;
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] .sidebar {
+  background: #0f172a;
+  border-right-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .sidebar-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .new-chat {
+  background: #17223b;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .new-chat:hover {
+  background: #1e2e50;
+  border-color: #3b82f6;
+  color: #bfdbfe;
+}
+
+[data-theme="dark"] .chat-list {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .chat-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .chat-item-active {
+  background: #1e293b;
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+[data-theme="dark"] .chat-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .composer-area {
+  background: rgba(11, 15, 25, 0.88);
+  backdrop-filter: blur(12px);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .composer-box {
+  background: #131b2e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .composer-box:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25), 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .send-button {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .send-button:not(:disabled):hover {
+  background: #3b82f6;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.45);
+}
+
+[data-theme="dark"] .send-button:disabled {
+  background: rgba(37, 99, 235, 0.22);
+  color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .mic-button {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .mic-button:hover:not(:disabled) {
+  background: #243450;
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .listening-text {
+  color: #f87171;
+}
+
+[data-theme="dark"] .sound-wave span {
+  background: #ef4444;
+}
+
+[data-theme="dark"] .stop-listening-btn {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .stop-listening-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* Burbujas y conversación */
+[data-theme="dark"] .bubble-user {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 12px rgba(29, 78, 216, 0.35);
+}
+
+[data-theme="dark"] .bubble-assistant {
+  background: #131b2e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .avatar {
+  background: #1e3a8a;
+  color: #93c5fd;
+  border: 1px solid rgba(147, 197, 253, 0.2);
+}
+
+[data-theme="dark"] .source-chip {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .source-chip:hover {
+  border-color: #3b82f6;
+  background: #25334d;
+  color: #bfdbfe;
+}
+
+[data-theme="dark"] .source-excerpt {
+  background: #090e1a;
+  border-left-color: #3b82f6;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .feedback-btn {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .feedback-btn:hover {
+  border-color: #3b82f6;
+  background: #243450;
+}
+
+[data-theme="dark"] .feedback-active {
+  background: #1e3a8a;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .bubble-moderated {
+  background: rgba(180, 83, 9, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="dark"] code {
+  background: #1e293b;
+  color: #93c5fd;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Pantalla de inicio */
+[data-theme="dark"] .card {
+  background: #131b2e;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .card:hover:not(:disabled) {
+  border-color: #3b82f6;
+  background: #17223b;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.18);
+}
+
+[data-theme="dark"] .card-icon {
+  background: #1e293b;
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .link-chip {
+  background: #131b2e;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .link-chip:hover {
+  border-color: #3b82f6;
+  background: #1e293b;
+  color: #bfdbfe;
+}
+
+[data-theme="dark"] .banner-error {
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .banner-warning {
+  background: rgba(217, 119, 6, 0.15);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #fde68a;
+}
+
+/* Modales y botones secundarios */
+[data-theme="dark"] .modal {
+  background: #131b2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="dark"] .button-ghost {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .button-ghost:hover {
+  background: #25334d;
+}
+
+[data-theme="dark"] .icon-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .icon-button:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Barra de desplazamiento elegante en modo oscuro */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+

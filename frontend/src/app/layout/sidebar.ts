@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { ChatStore } from '../core/chat.store';
 import { ChatSummary } from '../core/models';
+import { ThemeService } from '../core/theme.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -61,19 +62,24 @@ import { ChatSummary } from '../core/models';
           }
         </div>
 
-        <div class="sidebar-nav">
-          <a
-            routerLink="/analytics"
-            routerLinkActive="sidebar-nav-active"
-            class="sidebar-nav-link"
-            (click)="onOpenChat()"
-            aria-label="Panel de analítica de búsquedas"
-          >
-            📊 Analítica de búsquedas
-          </a>
-        </div>
-
         <div class="sidebar-footer">
+          <div class="sidebar-theme-row">
+            <span class="theme-label">Tema</span>
+            <button
+              type="button"
+              class="theme-pill-btn"
+              (click)="theme.toggleTheme()"
+              [attr.aria-label]="theme.isDark() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+              [attr.title]="theme.isDark() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+            >
+              @if (theme.isDark()) {
+                <span class="theme-pill-content">🌙 Oscuro</span>
+              } @else {
+                <span class="theme-pill-content">☀️ Claro</span>
+              }
+            </button>
+          </div>
+
           <p>Universidad EAFIT · {{ year }}</p>
           <p class="muted small">Respuestas informativas. La interpretación oficial
             corresponde a la instancia competente.</p>
@@ -105,6 +111,7 @@ export class Sidebar {
   @Output() closed = new EventEmitter<void>();
 
   protected readonly store = inject(ChatStore);
+  protected readonly theme = inject(ThemeService);
   protected readonly year = new Date().getFullYear();
 
   protected chatToDelete: ChatSummary | null = null;
