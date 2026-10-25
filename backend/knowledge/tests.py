@@ -439,3 +439,126 @@ class DocumentAdminUploadTests(TestCase):
         self.assertEqual(doc.chunks.count(), 1)
 
 
+class CalendarGuardTests(TestCase):
+    """US-17: Detección y filtrado de consultas sobre el calendario académico dinámico."""
+
+    def test_pregunta_inicio_clases_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Cuándo inician las clases en 2026?")
+        self.assertTrue(resultado.is_calendar_query)
+        self.assertIn("calendario académico", resultado.message.lower())
+        self.assertIn("reglamento académico", resultado.message.lower())
+
+    def test_pregunta_en_ingles_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("When do classes start in 2026?")
+        self.assertTrue(resultado.is_calendar_query)
+
+    def test_pregunta_semana_de_receso_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Cuándo es la semana de receso?")
+        self.assertTrue(resultado.is_calendar_query)
+
+    def test_pregunta_fecha_pago_matricula_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Cuál es la fecha límite de pago de matrícula?")
+        self.assertTrue(resultado.is_calendar_query)
+
+    def test_pregunta_cronograma_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Dónde consulto el cronograma de actividades de pregrado?")
+        self.assertTrue(resultado.is_calendar_query)
+
+    def test_pregunta_plazo_disciplinario_no_se_bloquea(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        # Las preguntas sobre plazos y términos del reglamento deben pasar al pipeline RAG
+        resultado = check_calendar_query("¿Cuántos días tengo para apelar una decisión disciplinaria?")
+        self.assertFalse(resultado.is_calendar_query)
+
+    def test_pregunta_cancelacion_materias_no_se_bloquea(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Hasta cuándo puedo cancelar una materia?")
+        self.assertFalse(resultado.is_calendar_query)
+
+
+class US17RagTests(TestCase):
+    """US-17: Integración con el calendario académico y plazos reglamentarios."""
+
+    def setUp(self):
+        self.document = Document.objects.create(
+            title="Reglamento Académico de Pregrado",
+            version="2025-1",
+        )
+        self.chunk_disciplinario = Chunk.objects.create(
+            document=self.document,
+            position=0,
+            article_ref="Artículo 54",
+            content=(
+                "Artículo 54. Recursos en proceso disciplinario. Contra la decisión sancionatoria "
+                "procede el recurso de reposición y en subsidio el de apelación dentro de los "
+                "cinco días hábiles siguientes a su notificación."
+            ),
+            embedding=[1.0, 0.0, 0.0],
+        )
+
+    def test_pregunta_fecha_dinamica_responde_sin_buscar_en_kb_ni_llamar_al_modelo(self):
+        """Criterio 2: si el usuario pregunta por fechas dinámicas del calendario,
+        el sistema aclara que solo maneja normas reglamentarias y no el calendario académico."""
+        with (
+            patch("knowledge.services.rag.retrieve") as mock_retrieve,
+            patch("knowledge.services.rag.generate_answer") as mock_generate,
+        ):
+            answer = rag.answer_question("¿Cuándo inician las clases en 2026?")
+
+        mock_retrieve.assert_not_called()
+        mock_generate.assert_not_called()
+        self.assertFalse(answer.grounded)
+        self.assertIn("solo gestiono normas", answer.content.lower())
+        self.assertIn("calendario académico", answer.content.lower())
+
+    def test_gherkin_consulta_plazo_disciplinario_cita_articulo_y_advierte_fechas(self):
+        """Gherkin scenario de US-17:
+        Given a student asks 'How many days do I have to appeal a disciplinary decision?'
+        When the system retrieves the information from the knowledge base
+        Then it provides the exact timeframe established in the regulation and warns that it does not manage specific calendar dates.
+        """
+        simulated_llm_response = (
+            "Para apelar una decisión disciplinaria dispones de cinco días hábiles "
+            "siguientes a su notificación (Artículo 54).\n\n"
+            "Ten en cuenta que EAFinder únicamente informa los plazos estipulados en el "
+            "Reglamento Académico y no gestiona fechas específicas del calendario académico."
+        )
+
+        with (
+            patch("knowledge.services.retriever.embed_query", return_value=[1.0, 0.0, 0.0]),
+            patch("knowledge.services.rag.generate_answer", return_value=simulated_llm_response) as mock_generate,
+        ):
+            answer = rag.answer_question("¿Cuántos días tengo para apelar una decisión disciplinaria?")
+
+        mock_generate.assert_called_once()
+        self.assertTrue(answer.grounded)
+        self.assertIn("Artículo 54", answer.content)
+        self.assertIn("cinco días hábiles", answer.content.lower())
+        self.assertIn("calendario académico", answer.content.lower())
+        self.assertEqual(answer.sources[0].chunk.article_ref, "Artículo 54")
+
+    def test_pregunta_fechas_dinamicas_no_registra_brecha_de_conocimiento(self):
+        """Las consultas sobre fechas del calendario son un caso fuera de alcance
+        manejado expresamente por US-17, por lo que no deben registrarse como brechas de conocimiento."""
+        from knowledge.models import KnowledgeGap
+
+        rag.answer_question("¿Cuándo inician las clases en 2026?")
+
+        self.assertFalse(
+            KnowledgeGap.objects.filter(query__icontains="inician las clases").exists()
+        )
+
+
+

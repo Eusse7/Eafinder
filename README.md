@@ -162,6 +162,7 @@ se sustituyen por dobles de prueba, así que corren sin clave y sin costo.
 | US14 | Entrada de voz para consultas | `frontend/src/app/layout/composer.ts`, `frontend/src/styles.css` (Web Speech API) |
 | US15 | Valoración de la precisión de las respuestas | modelo `Message.feedback`, endpoint `set_feedback`, botones en `chat.page.html` |
 | US16 | Sugerencias de preguntas frecuentes | tarjetas interactivas en `frontend/src/app/pages/welcome/` |
+| US17 | Integración con el calendario académico y plazos reglamentarios | `knowledge/services/rag.py`, `knowledge/services/calendar_guard.py` |
 | US18 | Registro de consultas sin respuesta y alertas de brechas de conocimiento | modelo `KnowledgeGap`, `gap_tracker.py`, `knowledge/admin.py`, reporte en `/admin/chats/analytics/` |
 | US19 | Cambio entre tema claro y oscuro | `frontend/src/app/core/theme.service.ts`, `topbar.ts`, `sidebar.ts`, `styles.css` (persistencia local y preferencia del SO) |
 | US20 | Filtro de seguridad y moderación de contenido sensible | `knowledge/services/moderation.py`, `rag.py`, `chats/models.py`, aviso en `chat.page.html` |

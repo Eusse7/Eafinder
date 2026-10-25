@@ -269,20 +269,25 @@
   * **Cuando** el usuario selecciona una sugerencia
   * **Entonces** el texto se incorpora al campo de consulta o se envía según el comportamiento definido por la interfaz
 
-### US-17 - Integración con el calendario académico
-**Como** Estudiante de EAFIT  
-**Quiero** consultar fechas académicas relevantes mediante el chatbot  
-**Para** encontrar fechas del calendario académico de forma rápida
+### US-17 — Integración con el calendario académico y plazos reglamentarios
+**Como** Estudiante  
+**Quiero** consultar los plazos y términos oficiales establecidos en el Reglamento Académico (ej. semestres máximos permitidos, días para apelar una calificación o decisión disciplinaria)  
+**Para** comprender mis derechos y obligaciones reglamentarias sin tener que leer todo el documento  
+
+#### Criterios de Aceptación:
+* El sistema responde preguntas sobre plazos y límites de tiempo utilizando exclusivamente el texto del Reglamento Académico (ej. "3 días hábiles").
+* Si un usuario pregunta por fechas dinámicas del calendario académico (ej. "¿Cuándo inician clases en 2026?"), el sistema responde aclarando que únicamente gestiona normas reglamentarias y no el calendario académico.
+* Las respuestas sobre plazos y términos deben citar explícitamente el artículo exacto que fija dicho límite.
 
 #### Criterios de Aceptación (Gherkin / Escenarios):
-* **Escenario 1:** Consulta de fecha
-  * **Dado que** el calendario académico vigente está disponible en la fuente configurada
-  * **Cuando** el estudiante pregunta por una fecha o evento académico
-  * **Entonces** el sistema presenta la información correspondiente al periodo y cita la fuente cuando esté disponible
-* **Escenario 2:** Calendario no disponible
-  * **Dado que** el sistema no puede acceder a datos vigentes del calendario
-  * **Cuando** el estudiante consulta una fecha
-  * **Entonces** el sistema informa que no puede verificarla y evita presentar una fecha como confirmada
+* **Escenario 1:** Consulta de plazos y términos reglamentarios
+  * **Dado que** un estudiante pregunta "¿Cuántos días tengo para apelar una decisión disciplinaria?" (o sobre un término o plazo reglamentario similar)
+  * **Cuando** el sistema recupera la información de la base de conocimiento
+  * **Entonces** proporciona el plazo exacto establecido en el reglamento, cita explícitamente el artículo correspondiente y advierte que no gestiona fechas específicas de calendario
+* **Escenario 2:** Consulta de fechas dinámicas del calendario académico
+  * **Dado que** un usuario pregunta por una fecha dinámica del calendario académico (ej. "¿Cuándo inician las clases en 2026?", fechas de receso o pagos)
+  * **Cuando** el sistema procesa la consulta
+  * **Entonces** responde indicando que solo gestiona normas reglamentarias y no el calendario académico dinámico, sugiriendo consultar los canales oficiales (Autoservicio EPIK o web EAFIT)
 
 ### US-18 - Registro de consultas sin respuesta y alertas de brechas de conocimiento
 **Como** Administrador o equipo de conocimiento  
