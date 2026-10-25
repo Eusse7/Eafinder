@@ -64,6 +64,11 @@ export class ChatPage implements OnInit, OnDestroy, AfterViewChecked {
     this.openSource = this.openSource === id ? null : id;
   }
 
+  /** Los mensajes optimistas tienen id temporal y aún no se pueden valorar. */
+  isTemp(id: string): boolean {
+    return id.startsWith('temp-');
+  }
+
   private scrollToBottom(): void {
     const element = this.scroller?.nativeElement;
 

@@ -34,6 +34,8 @@ def serialize_message(message: Message) -> dict:
         "role": message.role,
         "content": message.content,
         "created_at": message.created_at,
+        "feedback": message.feedback,
+        "moderated": message.moderated,
         "sources": [serialize_source(source) for source in message.sources.all()],
     }
 
@@ -145,6 +147,7 @@ def create_message(request, chat_id):
         chat=chat,
         role=Message.Role.ASSISTANT,
         content=answer.content,
+        moderated=answer.moderated,
     )
 
     MessageSource.objects.bulk_create(
@@ -170,6 +173,36 @@ def create_message(request, chat_id):
             "chat_title": chat.title,
         }
     )
+
+
+@api_view(["PATCH"])
+def set_feedback(request, chat_id, message_id):
+    """Registra el pulgar arriba/abajo de una respuesta del asistente (US15).
+
+    Acepta "up", "down" o "" (para quitar la valoración). Solo se puede
+    valorar un mensaje del asistente.
+    """
+    valor = request.data.get("feedback", "")
+
+    opciones_validas = {choice.value for choice in Message.Feedback} | {""}
+    if valor not in opciones_validas:
+        return Response(
+            {"error": "El feedback debe ser 'up', 'down' o vacío."},
+            status=400,
+        )
+
+    message = get_object_or_404(Message, id=message_id, chat_id=chat_id)
+
+    if message.role != Message.Role.ASSISTANT:
+        return Response(
+            {"error": "Solo se pueden valorar las respuestas del asistente."},
+            status=400,
+        )
+
+    message.feedback = valor
+    message.save(update_fields=["feedback"])
+
+    return Response(serialize_message(message))
 
 
 @api_view(["GET", "DELETE"])

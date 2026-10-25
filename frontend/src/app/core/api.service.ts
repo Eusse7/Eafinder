@@ -6,7 +6,9 @@ import { environment } from '../../environments/environment';
 import {
   Chat,
   ChatSummary,
+  Feedback,
   Health,
+  Message,
   SendMessageResponse,
 } from './models';
 import { SessionService } from './session.service';
@@ -42,6 +44,18 @@ export class ApiService {
     return this.http.post<SendMessageResponse>(
       `${this.base}/${chatId}/messages/`,
       { content },
+    );
+  }
+
+  /** US15: registra o quita la valoración de una respuesta del asistente. */
+  setFeedback(
+    chatId: string,
+    messageId: string,
+    feedback: Feedback,
+  ): Observable<Message> {
+    return this.http.patch<Message>(
+      `${this.base}/${chatId}/messages/${messageId}/feedback/`,
+      { feedback },
     );
   }
 

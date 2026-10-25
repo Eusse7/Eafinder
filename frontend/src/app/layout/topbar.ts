@@ -6,7 +6,12 @@ import { ChatStore } from '../core/chat.store';
   selector: 'app-topbar',
   template: `
     <header class="topbar">
-      <button type="button" class="icon-button" (click)="menuClick.emit()" aria-label="Menú">
+      <button
+        type="button"
+        class="icon-button topbar-menu"
+        (click)="menuClick.emit()"
+        aria-label="Abrir o cerrar barra lateral"
+      >
         ☰
       </button>
 
@@ -15,7 +20,10 @@ import { ChatStore } from '../core/chat.store';
       <span class="badge">IA</span>
 
       @if (!store.backendOnline()) {
-        <span class="status status-offline">Sin conexión con el backend</span>
+        <span class="status status-offline" title="Sin conexión con el backend">
+          <span class="offline-full">Sin conexión con el backend</span>
+          <span class="offline-short">Sin conexión</span>
+        </span>
       }
     </header>
   `,

@@ -1,7 +1,8 @@
 /* ==========================================================================
-   EAFinder — hoja de estilos global
-   Un solo archivo para todo el diseño: es más fácil de ajustar en equipo
-   que tener CSS repartido por componente.
+   EAFinder — Hoja de estilos global y responsiva (US03, US06, US07, US09)
+   Diseño adaptativo para móvil (<640px), tableta (640-1023px) y escritorio (>=1024px).
+   Touch targets táctiles optimizados (>=44px), prevención de scroll horizontal
+   y auto-ajuste de textos largos.
    ========================================================================== */
 
 :root {
@@ -17,6 +18,8 @@
   --warning: #b45309;
   --radius: 14px;
   --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --touch-target-min: 44px;
+  --sidebar-width: 280px;
 }
 
 * {
@@ -27,23 +30,30 @@ html,
 body {
   height: 100%;
   margin: 0;
+  overflow-x: hidden;
+  background: var(--background);
 }
 
 body {
   font-family: var(--font);
   color: var(--text);
-  background: var(--background);
   font-size: 15px;
   line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
 }
 
 button {
   font: inherit;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
   color: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 code {
@@ -51,6 +61,8 @@ code {
   border-radius: 4px;
   padding: 0 4px;
   font-size: 0.9em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .muted {
@@ -69,12 +81,15 @@ code {
   color: var(--danger);
 }
 
-/* --- Estructura ---------------------------------------------------------- */
+/* --- Estructura principal y Viewports (US06) ----------------------------- */
 
 .shell {
   display: flex;
   height: 100vh;
+  height: 100dvh; /* Soporte para barras dinámicas en navegadores móviles */
+  width: 100%;
   overflow: hidden;
+  position: relative;
 }
 
 .main-column {
@@ -82,22 +97,29 @@ code {
   flex: 1;
   min-width: 0;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
+  position: relative;
 }
 
 .content {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .composer-area {
   border-top: 1px solid var(--border);
-  background: rgba(238, 242, 255, 0.85);
+  background: rgba(238, 242, 255, 0.92);
+  backdrop-filter: blur(8px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .toast {
-  margin: 12px auto 0;
+  margin: 10px auto 0;
   width: fit-content;
   max-width: 90%;
   border-radius: 8px;
@@ -105,35 +127,47 @@ code {
   color: #fff;
   padding: 8px 16px;
   font-size: 14px;
+  text-align: center;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
 }
 
-/* --- Barra superior ------------------------------------------------------ */
+/* --- Barra superior (US06) ----------------------------------------------- */
 
 .topbar {
   display: flex;
   align-items: center;
   gap: 10px;
   height: 56px;
+  min-height: 56px;
   padding: 0 16px;
   border-bottom: 1px solid var(--border);
-  background: rgba(238, 242, 255, 0.85);
+  background: rgba(238, 242, 255, 0.92);
+  backdrop-filter: blur(8px);
+  z-index: 10;
 }
 
 .topbar-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
   background: var(--navy);
   color: #fff;
-  font-size: 12px;
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 .topbar-title {
   margin: 0;
   font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .badge {
@@ -143,60 +177,91 @@ code {
   color: var(--text-muted);
   font-size: 11px;
   padding: 1px 6px;
+  flex-shrink: 0;
 }
 
 .status-offline {
   margin-left: auto;
   color: var(--danger);
   font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
 }
 
+.offline-short {
+  display: none;
+}
+
+.offline-full {
+  display: inline;
+}
+
+/* Botones con área táctil cómoda (mínimo 40-44px) */
 .icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
   color: var(--text);
-  font-size: 14px;
+  font-size: 18px;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
 .icon-button:hover {
   background: #e2e8f0;
 }
 
-/* --- Barra lateral ------------------------------------------------------- */
+.icon-button:active {
+  transform: scale(0.92);
+  background: #cbd5e1;
+}
+
+/* --- Barra lateral responsiva (US06) ------------------------------------ */
 
 .sidebar {
   width: 0;
   height: 100vh;
+  height: 100dvh;
   flex-shrink: 0;
   overflow: hidden;
   border-right: 1px solid var(--border);
   background: var(--surface);
-  transition: width 0.25s ease;
-}
-
-.sidebar-open {
-  width: 264px;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-inner {
   display: flex;
   height: 100%;
-  width: 264px;
+  width: 280px;
+  max-width: 85vw;
   flex-direction: column;
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px;
+  gap: 10px;
+  padding: 10px 16px;
+  min-height: 56px;
   border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .brand-mark {
@@ -211,6 +276,7 @@ code {
 
 .brand-name {
   font-weight: 600;
+  font-size: 16px;
 }
 
 .sidebar-close {
@@ -218,18 +284,30 @@ code {
 }
 
 .new-chat {
-  margin: 12px;
+  margin: 12px 14px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--background);
   color: var(--navy);
   font-weight: 600;
-  padding: 9px 12px;
+  font-size: 14px;
+  padding: 10px 14px;
   text-align: left;
+  touch-action: manipulation;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
 }
 
 .new-chat:hover {
   border-color: var(--navy-soft);
+  background: #e0e7ff;
+}
+
+.new-chat:active {
+  transform: scale(0.98);
 }
 
 .chat-list {
@@ -238,10 +316,11 @@ code {
   overflow-y: auto;
   padding: 4px 12px 12px;
   border-bottom: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
 }
 
 .chat-list-title {
-  margin: 4px 0 8px;
+  margin: 8px 4px 6px;
   color: var(--text-muted);
   font-size: 11px;
   font-weight: 600;
@@ -254,6 +333,8 @@ code {
   align-items: center;
   gap: 4px;
   border-radius: 8px;
+  min-height: 44px;
+  transition: background-color 0.15s ease;
 }
 
 .chat-item:hover {
@@ -268,30 +349,62 @@ code {
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  padding: 8px;
+  padding: 10px 10px;
   color: var(--text);
   font-size: 14px;
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 .chat-delete {
-  width: 22px;
-  height: 22px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0;
+  touch-action: manipulation;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
 .chat-item:hover .chat-delete {
   opacity: 1;
 }
 
+.chat-delete:hover {
+  background: #fee2e2;
+  color: var(--danger);
+}
+
+/* En pantallas táctiles el botón de eliminar permanece accesible sin depender de hover */
+@media (hover: none), (max-width: 1023px) {
+  .chat-delete {
+    opacity: 0.65;
+  }
+
+  .chat-delete:active {
+    opacity: 1;
+    background: #fee2e2;
+    color: var(--danger);
+  }
+}
+
 .sidebar-footer {
   padding: 12px 16px 16px;
   color: var(--text-muted);
   font-size: 12px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
 }
 
 .sidebar-footer p {
@@ -302,7 +415,9 @@ code {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(15, 23, 42, 0.25);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  touch-action: manipulation;
 }
 
 /* --- Modal --------------------------------------------------------------- */
@@ -315,43 +430,70 @@ code {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  touch-action: manipulation;
 }
 
 .modal {
   width: 100%;
-  max-width: 380px;
+  max-width: min(380px, calc(100vw - 32px));
   border-radius: var(--radius);
   background: var(--surface);
   padding: 20px;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+  box-sizing: border-box;
 }
 
 .modal h3 {
   margin: 0 0 8px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .modal p {
   margin: 0 0 16px;
   color: var(--text-muted);
   font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .button-ghost,
 .button-danger {
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 10px 16px;
+  min-height: 44px;
+  min-width: 84px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  touch-action: manipulation;
+  transition: transform 0.1s ease, background-color 0.15s ease;
 }
 
 .button-ghost {
   border: 1px solid var(--border);
   background: var(--surface);
+  color: var(--text);
+}
+
+.button-ghost:hover {
+  background: #f8fafc;
+}
+
+.button-ghost:active {
+  transform: scale(0.96);
+  background: #e2e8f0;
 }
 
 .button-danger {
@@ -360,15 +502,26 @@ code {
   color: #fff;
 }
 
+.button-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.button-danger:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
 .button-danger:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* --- Campo de consulta --------------------------------------------------- */
+/* --- Campo de consulta táctil y adaptativo (US06) ----------------------- */
 
 .composer {
-  padding: 16px 24px 12px;
+  padding: 14px 20px 10px;
+  max-width: 52rem;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .composer-box {
@@ -377,34 +530,57 @@ code {
   gap: 10px;
   border-radius: var(--radius);
   background: var(--surface);
-  padding: 10px 14px;
+  padding: 8px 12px;
   box-shadow: 0 1px 8px rgba(15, 23, 42, 0.12);
+  border: 1px solid var(--border);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.composer-box:focus-within {
+  border-color: var(--navy-soft);
+  box-shadow: 0 2px 14px rgba(37, 99, 235, 0.16);
 }
 
 .composer-input {
   flex: 1;
+  min-width: 0;
   max-height: 160px;
   border: none;
   background: transparent;
   color: var(--text);
   font: inherit;
-  line-height: 1.6;
+  font-size: 16px; /* Evita zoom automático involuntario en iOS Safari */
+  line-height: 1.5;
   outline: none;
   resize: none;
+  padding: 8px 4px;
 }
 
 .send-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
   flex-shrink: 0;
   border: none;
   border-radius: 50%;
   background: var(--navy);
   color: #fff;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.send-button:not(:disabled):hover {
+  background: var(--navy-soft);
+}
+
+.send-button:not(:disabled):active {
+  transform: scale(0.92);
 }
 
 .send-button:disabled {
@@ -415,18 +591,23 @@ code {
 .composer-note {
   margin: 8px 0 4px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
   text-align: center;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-/* --- Pantalla inicial ---------------------------------------------------- */
+/* --- Pantalla inicial adaptativa (US03, US06) ---------------------------- */
 
 .welcome {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 28px 20px 36px;
+  padding: 24px 16px 32px;
   text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .logo-card {
@@ -442,7 +623,7 @@ code {
 
 .logo-img {
   display: block;
-  height: 88px;
+  height: clamp(64px, 14vw, 88px);
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 8px 18px rgba(23, 37, 84, 0.12));
@@ -451,13 +632,6 @@ code {
 
 .logo-img:hover {
   transform: translateY(-2px);
-}
-
-.logo-text {
-  color: var(--navy);
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
 }
 
 .logo-status {
@@ -473,37 +647,39 @@ code {
   z-index: 2;
 }
 
-.sidebar-logo {
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
-  background: transparent;
-  box-shadow: none;
-}
-
 .logo-status-offline {
   background: var(--danger);
 }
 
 .welcome-header h1 {
-  margin: 22px 0 6px;
-  font-size: 30px;
+  margin: 18px 0 6px;
+  font-size: clamp(22px, 5vw, 30px);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .welcome-header h2 {
   margin: 0 auto;
   max-width: 34rem;
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: clamp(14px, 3.5vw, 16px);
   font-weight: 400;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .banner {
-  margin: 18px 0 0;
+  margin: 16px 0 0;
+  width: 100%;
   max-width: 40rem;
   border-radius: 10px;
   font-size: 14px;
   padding: 10px 14px;
+  text-align: left;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .banner-error {
@@ -520,7 +696,7 @@ code {
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr;
-  margin-top: 26px;
+  margin-top: 24px;
   width: 100%;
   max-width: 44rem;
 }
@@ -533,13 +709,20 @@ code {
   border-radius: var(--radius);
   background: var(--surface);
   padding: 12px 14px;
+  min-height: 54px;
   text-align: left;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  touch-action: manipulation;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 .card:hover:not(:disabled) {
   border-color: var(--navy-soft);
   box-shadow: 0 2px 12px rgba(37, 99, 235, 0.14);
+}
+
+.card:active:not(:disabled) {
+  transform: scale(0.98);
+  border-color: var(--navy-soft);
 }
 
 .card:disabled {
@@ -553,6 +736,8 @@ code {
   justify-content: center;
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   flex-shrink: 0;
   border-radius: 10px;
   background: var(--background);
@@ -568,22 +753,29 @@ code {
 
 .card-title {
   font-weight: 600;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .card-description {
   color: var(--text-muted);
   font-size: 13px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .card-chevron {
   color: var(--text-muted);
   font-size: 18px;
+  flex-shrink: 0;
 }
 
 .welcome-note {
   margin: 20px 0 0;
   color: var(--text-muted);
   font-size: 13px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .links {
@@ -594,6 +786,7 @@ code {
   gap: 8px;
   margin-top: 26px;
   max-width: 44rem;
+  width: 100%;
 }
 
 .links-title {
@@ -606,25 +799,39 @@ code {
 }
 
 .link-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
   color: var(--navy);
   font-size: 13px;
-  padding: 5px 12px;
+  font-weight: 500;
+  padding: 8px 14px;
+  min-height: 38px;
   text-decoration: none;
+  touch-action: manipulation;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
 }
 
 .link-chip:hover {
   border-color: var(--navy-soft);
 }
 
-/* --- Conversación -------------------------------------------------------- */
+.link-chip:active {
+  transform: scale(0.96);
+  background: #f1f5f9;
+}
+
+/* --- Conversación y mensajes (US06, US09) -------------------------------- */
 
 .chat {
   height: 100%;
   overflow-y: auto;
-  padding: 24px 20px;
+  overflow-x: hidden;
+  padding: 20px 16px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .chat-inner {
@@ -633,12 +840,16 @@ code {
   gap: 16px;
   margin: 0 auto;
   max-width: 52rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .row {
   display: flex;
   align-items: flex-end;
   gap: 8px;
+  width: 100%;
+  min-width: 0;
 }
 
 .row-end {
@@ -654,8 +865,10 @@ code {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--navy);
@@ -667,10 +880,16 @@ code {
   max-width: 78%;
   border-radius: var(--radius);
   padding: 12px 16px;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bubble p {
   margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bubble-user {
@@ -687,13 +906,16 @@ code {
 
 .bubble-text {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.55;
 }
 
 .bubble-time {
   display: block;
   margin-top: 6px;
   font-size: 11px;
-  opacity: 0.6;
+  opacity: 0.65;
 }
 
 /* --- Fuentes citadas (US09) ---------------------------------------------- */
@@ -702,11 +924,12 @@ code {
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
+  width: 100%;
 }
 
 .sources-title {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: var(--text-muted);
   font-size: 11px;
   font-weight: 600;
@@ -714,29 +937,112 @@ code {
   text-transform: uppercase;
 }
 
+.source-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.source-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .source-chip {
-  display: inline-block;
-  margin: 0 6px 6px 0;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--background);
   color: var(--navy);
   font-size: 12px;
-  padding: 3px 10px;
+  font-weight: 500;
+  padding: 6px 12px;
+  min-height: 36px;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
 }
 
 .source-chip:hover {
   border-color: var(--navy-soft);
+  background: #e0e7ff;
+}
+
+.source-chip:active {
+  transform: scale(0.96);
+  background: #dbeafe;
 }
 
 .source-excerpt {
-  margin: 4px 0 10px;
+  margin: 6px 0 8px;
   border-left: 3px solid var(--primary);
   background: #f8fafc;
   color: var(--text-muted);
   font-size: 13px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  border-radius: 0 8px 8px 0;
+  line-height: 1.5;
+}
+
+/* --- Valoración de respuestas (US15) ------------------------------------- */
+
+.feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.feedback-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  line-height: 1;
+  font-size: 14px;
+  padding: 4px 9px;
+  opacity: 0.65;
+  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.feedback-btn:hover {
+  opacity: 1;
+  border-color: var(--navy-soft);
+}
+
+.feedback-active {
+  opacity: 1;
+  border-color: var(--primary);
+  background: var(--background);
+}
+
+.feedback-thanks {
+  margin-left: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* --- Aviso de moderación (US20) ------------------------------------------ */
+
+.bubble-moderated {
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+}
+
+.moderated-tag {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: var(--warning);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* --- Indicador de procesamiento (US07) ----------------------------------- */
@@ -751,6 +1057,8 @@ code {
   margin-left: 6px;
   color: var(--text-muted);
   font-size: 13px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dot {
@@ -780,11 +1088,21 @@ code {
   }
 }
 
-/* --- Responsive (US06) --------------------------------------------------- */
+/* ==========================================================================
+   Breakpoints adaptativos (US06)
+   - Móvil:      < 640px
+   - Tableta:    640px - 1023px
+   - Escritorio: >= 1024px
+   ========================================================================== */
 
-@media (min-width: 640px) {
-  .cards {
-    grid-template-columns: 1fr 1fr;
+/* --- Escritorio (>= 1024px) ---------------------------------------------- */
+@media (min-width: 1024px) {
+  .sidebar-open {
+    width: 264px;
+  }
+
+  .sidebar-inner {
+    width: 264px;
   }
 
   .sidebar-close {
@@ -792,27 +1110,179 @@ code {
   }
 
   .sidebar-overlay {
-    display: none;
+    display: none !important;
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .bubble {
+    max-width: 75%;
   }
 }
 
-@media (max-width: 639px) {
+/* --- Tableta y Móvil (< 1024px): cajón lateral off-canvas ---------------- */
+@media (max-width: 1023px) {
   .sidebar {
     position: fixed;
     left: 0;
     top: 0;
+    bottom: 0;
     z-index: 50;
+    box-shadow: none;
+  }
+
+  .sidebar-open {
+    width: min(280px, 85vw);
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.2);
+  }
+
+  .sidebar-inner {
+    width: min(280px, 85vw);
+  }
+
+  .sidebar-close {
+    display: inline-flex;
+  }
+}
+
+/* --- Tableta (640px a 1023px) -------------------------------------------- */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .bubble {
+    max-width: 80%;
+  }
+}
+
+/* --- Móvil (< 640px) ----------------------------------------------------- */
+@media (max-width: 639px) {
+  .topbar {
+    padding: 0 10px;
+    gap: 6px;
+    height: 52px;
+    min-height: 52px;
+  }
+
+  .topbar-title {
+    font-size: 14px;
+  }
+
+  .offline-full {
+    display: none;
+  }
+
+  .offline-short {
+    display: inline;
+    font-size: 11px;
+  }
+
+  .chat {
+    padding: 12px 10px;
+  }
+
+  .chat-inner {
+    gap: 12px;
+  }
+
+  .row {
+    gap: 6px;
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 11px;
+  }
+
+  .bubble {
+    max-width: calc(100% - 36px);
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .bubble-user {
     max-width: 88%;
   }
 
+  .source-chip {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-height: 34px;
+  }
+
   .composer {
-    padding: 12px 14px 8px;
+    padding: 8px 10px 6px;
+  }
+
+  .composer-box {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .composer-input {
+    padding: 6px 2px;
+    font-size: 16px; /* Mantiene 16px para prevenir zoom en iPhone */
+  }
+
+  .send-button {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    font-size: 16px;
+  }
+
+  .composer-note {
+    font-size: 11px;
+    margin: 6px 0 2px;
+    line-height: 1.35;
+  }
+
+  .welcome {
+    padding: 18px 12px 24px;
   }
 
   .welcome-header h1 {
-    font-size: 24px;
+    font-size: 23px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .card {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 16px;
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  .card-description {
+    font-size: 12px;
+  }
+
+  .link-chip {
+    padding: 7px 12px;
+    font-size: 12px;
+    min-height: 36px;
   }
 }

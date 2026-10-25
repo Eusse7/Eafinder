@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from django.conf import settings
 
 from .ai_provider import AIProviderError, generate_answer
+from .moderation import moderate
 from .retriever import RetrievedChunk, retrieve
 
 SYSTEM_PROMPT = """\
@@ -59,6 +60,9 @@ class Answer:
     content: str
     sources: list[RetrievedChunk] = field(default_factory=list)
     grounded: bool = False
+    # US20: True cuando la respuesta la produjo el filtro de moderación en
+    # lugar del pipeline RAG. El frontend la muestra de forma distinguible.
+    moderated: bool = False
 
 
 def build_context(retrieved: list[RetrievedChunk]) -> str:
@@ -88,6 +92,13 @@ def build_user_prompt(question: str, context: str, history: list[dict]) -> str:
 def answer_question(question: str, history: list[dict] | None = None) -> Answer:
     """Responde una pregunta usando solo los documentos indexados."""
     history = history or []
+
+    # US20: filtro de moderación antes de tocar el pipeline. Si la pregunta
+    # es contenido sensible, no se busca en el reglamento ni se llama al
+    # modelo: se devuelve una respuesta segura.
+    verdict = moderate(question)
+    if verdict.flagged:
+        return Answer(content=verdict.message, grounded=False, moderated=True)
 
     retrieved = retrieve(question)
 

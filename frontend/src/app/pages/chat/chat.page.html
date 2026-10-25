@@ -16,21 +16,66 @@
         <div class="row row-start">
           <div class="avatar">✦</div>
 
-          <div class="bubble bubble-assistant">
+          <div
+            class="bubble bubble-assistant"
+            [class.bubble-moderated]="message.moderated"
+          >
+            @if (message.moderated) {
+              <span class="moderated-tag">⚠️ Aviso de seguridad</span>
+            }
+
             <p class="bubble-text">{{ message.content }}</p>
 
             @if (message.sources.length > 0) {
               <div class="sources">
-                <span class="sources-title">Fuentes</span>
+                <span class="sources-title">Fuentes citadas</span>
 
-                @for (source of message.sources; track source.id) {
-                  <button type="button" class="source-chip" (click)="toggleSource(source.id)">
-                    {{ source.label }}
-                  </button>
+                <div class="source-chips">
+                  @for (source of message.sources; track source.id) {
+                    <div class="source-item">
+                      <button
+                        type="button"
+                        class="source-chip"
+                        (click)="toggleSource(source.id)"
+                        [attr.aria-expanded]="openSource === source.id"
+                      >
+                        {{ source.label }}
+                      </button>
 
-                  @if (openSource === source.id) {
-                    <blockquote class="source-excerpt">{{ source.excerpt }}</blockquote>
+                      @if (openSource === source.id) {
+                        <blockquote class="source-excerpt">{{ source.excerpt }}</blockquote>
+                      }
+                    </div>
                   }
+                </div>
+              </div>
+            }
+
+            @if (!message.moderated && !isTemp(message.id)) {
+              <div class="feedback" aria-label="¿Te fue útil esta respuesta?">
+                <button
+                  type="button"
+                  class="feedback-btn"
+                  [class.feedback-active]="message.feedback === 'up'"
+                  [attr.aria-pressed]="message.feedback === 'up'"
+                  title="Respuesta útil"
+                  (click)="store.sendFeedback(message.id, 'up')"
+                >
+                  👍
+                </button>
+                <button
+                  type="button"
+                  class="feedback-btn"
+                  [class.feedback-active]="message.feedback === 'down'"
+                  [attr.aria-pressed]="message.feedback === 'down'"
+                  title="Respuesta no útil"
+                  (click)="store.sendFeedback(message.id, 'down')"
+                >
+                  👎
+                </button>
+
+                @if (message.feedback) {
+                  <span class="feedback-thanks">¡Gracias por tu valoración!</span>
                 }
               </div>
             }

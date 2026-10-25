@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiService } from './api.service';
-import { ChatSummary, Health, Message } from './models';
+import { ChatSummary, Feedback, Health, Message } from './models';
 
 export const MAX_CHATS = 5;
 
@@ -137,6 +137,8 @@ export class ChatStore {
       role: 'user',
       content: text,
       created_at: new Date().toISOString(),
+      feedback: '',
+      moderated: false,
       sources: [],
     };
     this.messages.update((messages) => [...messages, optimistic]);
@@ -162,6 +164,49 @@ export class ChatStore {
     } finally {
       this.sending.set(false);
     }
+  }
+
+  // -------------------------------------------------------------------
+  // Valoración de respuestas (US15)
+  // -------------------------------------------------------------------
+
+  /**
+   * Registra el pulgar arriba/abajo. Volver a pulsar el mismo botón quita
+   * la valoración. La UI se actualiza de inmediato y revierte si el backend
+   * falla.
+   */
+  async sendFeedback(messageId: string, value: 'up' | 'down'): Promise<void> {
+    const chatId = this.activeChatId();
+
+    if (!chatId) {
+      return;
+    }
+
+    const current = this.messages().find((message) => message.id === messageId);
+
+    if (!current) {
+      return;
+    }
+
+    const previous: Feedback = current.feedback;
+    const next: Feedback = current.feedback === value ? '' : value;
+
+    this.patchFeedback(messageId, next);
+
+    try {
+      await firstValueFrom(this.api.setFeedback(chatId, messageId, next));
+    } catch {
+      this.patchFeedback(messageId, previous);
+      this.showToast('No se pudo registrar tu valoración. Inténtalo de nuevo.');
+    }
+  }
+
+  private patchFeedback(messageId: string, feedback: Feedback): void {
+    this.messages.update((messages) =>
+      messages.map((message) =>
+        message.id === messageId ? { ...message, feedback } : message,
+      ),
+    );
   }
 
   startNewChat(): void {
