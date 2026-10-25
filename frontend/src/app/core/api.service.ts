@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {
+  AnalyticsData,
   Chat,
   ChatSummary,
   Feedback,
@@ -61,5 +62,10 @@ export class ApiService {
 
   deleteChat(chatId: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${chatId}/`);
+  }
+
+  /** US05: obtiene métricas agregadas del panel de analítica. */
+  getAnalytics(): Observable<AnalyticsData> {
+    return this.http.get<AnalyticsData>(`${this.base}/analytics/`);
   }
 }

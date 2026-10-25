@@ -9,6 +9,20 @@
       name="description"
       content="Asistente de la Universidad EAFIT para consultar el Reglamento Académico en lenguaje natural."
     />
+    <meta name="theme-color" content="#eef2ff" />
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('eafinder_theme');
+          if (t === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.style.colorScheme = 'dark';
+            var m = document.querySelector('meta[name="theme-color"]');
+            if (m) m.setAttribute('content', '#0b0f19');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/png" href="eafinder-crest.png" />
     <link rel="icon" href="favicon.ico" />
   </head>

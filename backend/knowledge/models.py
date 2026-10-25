@@ -99,3 +99,56 @@ class Chunk(models.Model):
         if self.article_ref:
             return f"{self.document.title}, {self.article_ref}"
         return self.document.title
+
+
+class KnowledgeGap(models.Model):
+    """Registro de consultas sin respuesta y alertas de brechas de conocimiento (US18).
+
+    Registra preguntas que el pipeline RAG no pudo responder por falta de
+    información en los documentos indexados o baja similitud semántica.
+    Respeta la privacidad del usuario: no almacena identificadores personales,
+    cookies ni sesiones.
+    """
+
+    class Reason(models.TextChoices):
+        LOW_RELEVANCE = "low_relevance", "Baja relevancia semántica"
+        EMPTY_KB = "empty_kb", "Base de conocimiento vacía"
+        NO_CHUNKS = "no_chunks", "Sin fragmentos recuperados"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pendiente"
+        REVIEWED = "reviewed", "Revisada"
+        RESOLVED = "resolved", "Documento incorporado"
+        DISMISSED = "dismissed", "Descartada (fuera de alcance)"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    query = models.TextField(help_text="Texto de la consulta que no pudo responderse.")
+    normalized_query = models.CharField(max_length=255, db_index=True)
+    reason = models.CharField(
+        max_length=20,
+        choices=Reason.choices,
+        default=Reason.LOW_RELEVANCE,
+    )
+    max_similarity = models.FloatField(
+        default=0.0,
+        help_text="Puntaje de similitud más alto encontrado.",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(
+        blank=True,
+        help_text="Notas o acciones tomadas por el equipo de conocimiento.",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "brecha de conocimiento"
+        verbose_name_plural = "brechas de conocimiento"
+
+    def __str__(self) -> str:
+        return f"Brecha: {self.query[:60]}"

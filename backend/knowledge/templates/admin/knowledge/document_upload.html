@@ -1,0 +1,119 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:knowledge_document_changelist' %}">Documentos</a>
+&rsaquo; Cargar e indexar reglamento (US12)
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" style="max-width: 800px;">
+  <div style="margin-bottom: 24px;">
+    <h1 style="font-size: 1.6rem; color: #172554; margin: 0 0 6px 0;">📤 Carga de Nuevos Reglamentos (US12)</h1>
+    <p style="color: #64748b; font-size: 0.95rem; margin: 0;">
+      Selecciona un archivo normativo autorizado para validarlo, extraer sus artículos, calcular sus embeddings e incorporarlo a las respuestas del chatbot.
+    </p>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+    {% csrf_token %}
+
+    <div style="margin-bottom: 20px;">
+      <label for="id_file" style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
+        Archivo del documento <span style="color: #dc2626;">*</span>
+      </label>
+      <input
+        type="file"
+        name="file"
+        id="id_file"
+        accept=".pdf,.docx,.txt,.md"
+        required
+        style="display: block; width: 100%; padding: 10px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc;"
+      />
+      <span style="font-size: 0.85rem; color: #64748b; display: block; margin-top: 4px;">
+        Formatos compatibles: <strong>.pdf</strong>, <strong>.docx</strong>, <strong>.txt</strong> o <strong>.md</strong>.
+      </span>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label for="id_title" style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
+        Título institucional <span style="color: #dc2626;">*</span>
+      </label>
+      <input
+        type="text"
+        name="title"
+        id="id_title"
+        placeholder="Ej: Reglamento Académico de los programas de pregrado"
+        required
+        value="{{ title|default:'' }}"
+        style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;"
+      />
+      <span style="font-size: 0.85rem; color: #64748b; display: block; margin-top: 4px;">
+        Nombre oficial tal como se citará en las fuentes del chat (US09).
+      </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+      <div>
+        <label for="id_version" style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
+          Versión <span style="color: #dc2626;">*</span>
+        </label>
+        <input
+          type="text"
+          name="version"
+          id="id_version"
+          placeholder="Ej: 2025-1"
+          required
+          value="{{ version|default:'1' }}"
+          style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;"
+        />
+      </div>
+
+      <div>
+        <label for="id_source_url" style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
+          Enlace oficial (opcional)
+        </label>
+        <input
+          type="url"
+          name="source_url"
+          id="id_source_url"
+          placeholder="https://www.eafit.edu.co/..."
+          value="{{ source_url|default:'' }}"
+          style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;"
+        />
+      </div>
+    </div>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px;">
+      <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; color: #1e293b; font-size: 0.95rem;">
+        <input type="checkbox" name="retire_previous" value="1" style="margin-top: 3px;" />
+        <span>
+          <strong>Retirar versiones anteriores con este mismo título (US13)</strong><br />
+          <span style="color: #64748b; font-size: 0.85rem;">
+            Las versiones previas se conservarán para trazabilidad histórica, pero dejarán de usarse para responder nuevas preguntas.
+          </span>
+        </span>
+      </label>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <button
+        type="submit"
+        style="background: #1e3a8a; color: #ffffff; padding: 10px 22px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer;"
+      >
+        Validar e Indexar Documento
+      </button>
+
+      <a
+        href="{% url 'admin:knowledge_document_changelist' %}"
+        style="color: #64748b; text-decoration: none; font-size: 0.95rem; padding: 10px 16px;"
+      >
+        Cancelar
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

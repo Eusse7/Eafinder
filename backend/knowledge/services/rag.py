@@ -1,4 +1,4 @@
-"""Pipeline de respuesta anclada (US01, US04, US08, US09, US10).
+"""Pipeline de respuesta anclada (US01, US04, US08, US09, US10, US17).
 
 El orden de los pasos es el que fija el SRS (1.4-f):
 
@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from django.conf import settings
 
 from .ai_provider import AIProviderError, generate_answer
+from .calendar_guard import check_calendar_query
 from .moderation import moderate
 from .retriever import RetrievedChunk, retrieve
 
@@ -35,8 +36,17 @@ conocimiento general.
 4. Responde en español, en tono neutral, claro y breve. Usa pasos numerados \
 cuando expliques un trámite.
 5. No des fechas del calendario académico, tarifas ni valores de matrícula: \
-esos datos no están en el reglamento. Remite al canal oficial.
-6. Tus respuestas son informativas; la interpretación oficial corresponde a \
+esos datos no están en el reglamento. Si el usuario pregunta por fechas \
+dinámicas del calendario académico (p. ej. inicio o fin de clases, fechas \
+límite de pago o recesos), responde indicando que solo gestionas normas \
+reglamentarias y no el calendario académico, remitiendo a los canales oficiales.
+6. Al responder sobre plazos, términos o límites de tiempo reglamentarios \
+(p. ej. días hábiles para apelar una decisión disciplinaria o calificación, \
+semanas para cancelar materias, semestres máximos permitidos):
+   a. Utiliza exclusivamente el plazo establecido en el texto del reglamento (ej. "3 días hábiles", "semana 8").
+   b. Cita explícitamente el artículo exacto que fija dicho límite.
+   c. Advierte siempre que no gestionas fechas específicas de calendario y que para conocer las fechas exactas de este periodo debe consultarse el calendario académico oficial.
+7. Tus respuestas son informativas; la interpretación oficial corresponde a \
 la instancia competente de la Universidad.
 """
 
@@ -100,14 +110,33 @@ def answer_question(question: str, history: list[dict] | None = None) -> Answer:
     if verdict.flagged:
         return Answer(content=verdict.message, grounded=False, moderated=True)
 
+    # US-17: filtro de consultas sobre fechas dinámicas del calendario académico.
+    # El sistema aclara que solo maneja normas reglamentarias y no el calendario académico.
+    calendar_check = check_calendar_query(question)
+    if calendar_check.is_calendar_query:
+        return Answer(content=calendar_check.message, grounded=False)
+
     retrieved = retrieve(question)
 
     if not retrieved:
+        from knowledge.models import KnowledgeGap
+        from .gap_tracker import record_gap
+
+        record_gap(question, reason=KnowledgeGap.Reason.EMPTY_KB, max_similarity=0.0)
         return Answer(content=EMPTY_KNOWLEDGE_BASE_MESSAGE, grounded=False)
 
+    max_score = max((item.score for item in retrieved), default=0.0)
     relevantes = [item for item in retrieved if item.score >= settings.RAG_MIN_RELEVANCE]
 
     if not relevantes:
+        from knowledge.models import KnowledgeGap
+        from .gap_tracker import record_gap
+
+        record_gap(
+            question,
+            reason=KnowledgeGap.Reason.LOW_RELEVANCE,
+            max_similarity=max_score,
+        )
         return Answer(content=NO_CONTEXT_MESSAGE, grounded=False)
 
     context = build_context(relevantes)

@@ -114,8 +114,10 @@ python manage.py ingest_document ../docs/reglamento_2026.pdf \
   --doc-version 2026-1 --retire-previous
 ```
 
-También se puede re-indexar desde el admin de Django
-(<http://localhost:8000/admin>, requiere `createsuperuser`).
+También se pueden cargar e indexar nuevos documentos o re-indexar los
+existentes directamente desde la interfaz web del admin de Django
+(<http://localhost:8000/admin>, requiere `createsuperuser`), usando el botón
+**«📤 Cargar e indexar documento»** (US12).
 
 ### 3. Frontend
 
@@ -148,10 +150,22 @@ se sustituyen por dobles de prueba, así que corren sin clave y sin costo.
 | US02 | Entrenamiento y actualización de la base de conocimiento | `knowledge/management/commands/ingest_document.py`, `knowledge/admin.py` |
 | US03 | Acceso mediante interfaz centralizada | `frontend/src/app/pages/welcome/` |
 | US04 | Consulta de trámites del Reglamento Académico | prompt del sistema en `rag.py` |
+| US05 | Panel de analítica de búsquedas | `chats/views.py`, `chats/admin.py`, `frontend/src/app/pages/analytics/` |
 | US06 | Interfaz de chat responsiva para móvil, tableta y escritorio | `frontend/src/styles.css`, componentes de `layout/` y páginas |
+| US07 | Indicador de estado de procesamiento | `frontend/src/app/core/chat.store.ts`, `frontend/src/app/pages/chat/chat.page.html`, `styles.css` |
 | US08 | Procesamiento de consultas en lenguaje natural | `knowledge/services/retriever.py` |
 | US09 | Citación de fuentes institucionales | modelo `MessageSource`, chips de fuente en el chat |
-| US10 | Control de alucinación | umbral `RAG_MIN_RELEVANCE` en `rag.py` |
+| US10 | Control de alucinación y respuestas fuera de dominio | umbral `RAG_MIN_RELEVANCE` en `rag.py` |
+| US11 | Manejo de errores de conexión | `chats/views.py`, `knowledge/services/ai_provider.py`, `frontend/src/app/core/chat.store.ts` |
+| US12 | Carga de nuevos reglamentos | carga web en `knowledge/admin.py` (`/admin/knowledge/document/upload/`), comando CLI `ingest_document.py` |
+| US13 | Actualización o eliminación de documentos obsoletos | opción `--retire-previous` en `ingest_document.py`, acciones en `knowledge/admin.py` |
+| US14 | Entrada de voz para consultas | `frontend/src/app/layout/composer.ts`, `frontend/src/styles.css` (Web Speech API) |
+| US15 | Valoración de la precisión de las respuestas | modelo `Message.feedback`, endpoint `set_feedback`, botones en `chat.page.html` |
+| US16 | Sugerencias de preguntas frecuentes | tarjetas interactivas en `frontend/src/app/pages/welcome/` |
+| US17 | Integración con el calendario académico y plazos reglamentarios | `knowledge/services/rag.py`, `knowledge/services/calendar_guard.py` |
+| US18 | Registro de consultas sin respuesta y alertas de brechas de conocimiento | modelo `KnowledgeGap`, `gap_tracker.py`, `knowledge/admin.py`, reporte en `/admin/chats/analytics/` |
+| US19 | Cambio entre tema claro y oscuro | `frontend/src/app/core/theme.service.ts`, `topbar.ts`, `sidebar.ts`, `styles.css` (persistencia local y preferencia del SO) |
+| US20 | Filtro de seguridad y moderación de contenido sensible | `knowledge/services/moderation.py`, `rag.py`, `chats/models.py`, aviso en `chat.page.html` |
 
 ## Estructura
 

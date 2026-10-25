@@ -321,3 +321,244 @@ class RespuestaGeminiTests(TestCase):
         from knowledge.services.ai_provider import _config_de_generacion
 
         self.assertNotIn("thinkingLevel", _config_de_generacion("gemini-3.6-flash"))
+
+
+class KnowledgeGapTests(TestCase):
+    """US18: Registro de consultas sin respuesta y alertas de brechas de conocimiento."""
+
+    def setUp(self):
+        self.document = Document.objects.create(
+            title="Reglamento Académico",
+            version="2025-1",
+        )
+        Chunk.objects.create(
+            document=self.document,
+            position=0,
+            article_ref="Artículo 1",
+            content="Disposiciones generales de pregrado.",
+            embedding=[1.0, 0.0, 0.0],
+        )
+
+    @override_settings(RAG_MIN_RELEVANCE=0.9)
+    def test_consulta_sin_contexto_registra_brecha(self):
+        """Escenario 1: si no hay respuesta grounded, se registra el evento para analizar la brecha."""
+        from knowledge.models import KnowledgeGap
+
+        with patch("knowledge.services.retriever.embed_query", return_value=[0.0, 0.0, 1.0]):
+            rag.answer_question("¿Cuánto cuesta la inscripción al gimnasio de EAFIT?")
+
+        brechas = KnowledgeGap.objects.filter(query__icontains="gimnasio")
+        self.assertTrue(brechas.exists())
+        brecha = brechas.first()
+        self.assertEqual(brecha.reason, KnowledgeGap.Reason.LOW_RELEVANCE)
+        self.assertEqual(brecha.status, KnowledgeGap.Status.PENDING)
+        self.assertIn("gimnasio", brecha.normalized_query)
+
+    def test_reporte_de_brechas_agrupa_consultas_recurrentes(self):
+        """Escenario 2: agrupa consultas repetidas y detecta alertas de brechas."""
+        from knowledge.models import KnowledgeGap
+        from knowledge.services.gap_tracker import get_gap_report, record_gap
+
+        # Registrar dos consultas similares sobre el mismo tema
+        record_gap("¿Cuánto cuesta el parqueadero?", max_similarity=0.2)
+        record_gap("¿cuanto cuesta el parqueadero?", max_similarity=0.25)
+        record_gap("¿Dónde queda la enfermería?", max_similarity=0.1)
+
+        report = get_gap_report()
+
+        self.assertTrue(report["has_gaps"])
+        self.assertEqual(report["total_gaps"], 3)
+        self.assertTrue(report["has_alerts"])
+
+        # La consulta recurrente debe tener count 2 y estar de primera
+        top_gap = report["recurring_gaps"][0]
+        self.assertIn("parqueadero", top_gap["query"].lower())
+        self.assertEqual(top_gap["count"], 2)
+        self.assertTrue(top_gap["is_recurring"])
+
+
+class DocumentAdminUploadTests(TestCase):
+    """US12: Carga de nuevos reglamentos desde la interfaz web."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        self.admin_user = User.objects.create_superuser(
+            username="admin_user", password="adminpassword", email="admin@eafit.edu.co"
+        )
+        self.client.login(username="admin_user", password="adminpassword")
+
+    def test_upload_view_get_renderiza_formulario(self):
+        response = self.client.get("/admin/knowledge/document/upload/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Carga de Nuevos Reglamentos (US12)")
+        self.assertContains(response, 'type="file"')
+
+    def test_upload_archivo_invalido_es_rechazado(self):
+        """Escenario 2 de US12: si no cumple formato, se rechaza y se informa el motivo."""
+        from io import BytesIO
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        invalido = SimpleUploadedFile("virus.exe", b"binary content", content_type="application/octet-stream")
+
+        response = self.client.post(
+            "/admin/knowledge/document/upload/",
+            {
+                "file": invalido,
+                "title": "Reglamento No Válido",
+                "version": "2026-1",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Formato no permitido")
+
+    def test_upload_archivo_valido_procesa_e_indexa(self):
+        """Escenario 1 de US12: documento permitido se valida, procesa e incorpora."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from knowledge.models import Document
+
+        contenido = b"Articulo 1. Admisiones.\nEl proceso es semestral."
+        archivo = SimpleUploadedFile("reglamento.txt", contenido, content_type="text/plain")
+
+        with patch("knowledge.services.indexer.embed_texts", return_value=[[1.0, 0.0, 0.0]]):
+            response = self.client.post(
+                "/admin/knowledge/document/upload/",
+                {
+                    "file": archivo,
+                    "title": "Reglamento de Admisiones",
+                    "version": "2026-1",
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)  # Redirige a changelist al completar
+        doc = Document.objects.filter(title="Reglamento de Admisiones").first()
+        self.assertIsNotNone(doc)
+        self.assertEqual(doc.version, "2026-1")
+        self.assertTrue(doc.is_active)
+        self.assertEqual(doc.chunks.count(), 1)
+
+
+class CalendarGuardTests(TestCase):
+    """US-17: Detección y filtrado de consultas sobre el calendario académico dinámico."""
+
+    def test_pregunta_inicio_clases_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Cuándo inician las clases en 2026?")
+        self.assertTrue(resultado.is_calendar_query)
+        self.assertIn("calendario académico", resultado.message.lower())
+        self.assertIn("reglamento académico", resultado.message.lower())
+
+    def test_pregunta_en_ingles_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("When do classes start in 2026?")
+        self.assertTrue(resultado.is_calendar_query)
+
+    def test_pregunta_semana_de_receso_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Cuándo es la semana de receso?")
+        self.assertTrue(resultado.is_calendar_query)
+
+    def test_pregunta_fecha_pago_matricula_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Cuál es la fecha límite de pago de matrícula?")
+        self.assertTrue(resultado.is_calendar_query)
+
+    def test_pregunta_cronograma_se_detecta(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Dónde consulto el cronograma de actividades de pregrado?")
+        self.assertTrue(resultado.is_calendar_query)
+
+    def test_pregunta_plazo_disciplinario_no_se_bloquea(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        # Las preguntas sobre plazos y términos del reglamento deben pasar al pipeline RAG
+        resultado = check_calendar_query("¿Cuántos días tengo para apelar una decisión disciplinaria?")
+        self.assertFalse(resultado.is_calendar_query)
+
+    def test_pregunta_cancelacion_materias_no_se_bloquea(self):
+        from knowledge.services.calendar_guard import check_calendar_query
+
+        resultado = check_calendar_query("¿Hasta cuándo puedo cancelar una materia?")
+        self.assertFalse(resultado.is_calendar_query)
+
+
+class US17RagTests(TestCase):
+    """US-17: Integración con el calendario académico y plazos reglamentarios."""
+
+    def setUp(self):
+        self.document = Document.objects.create(
+            title="Reglamento Académico de Pregrado",
+            version="2025-1",
+        )
+        self.chunk_disciplinario = Chunk.objects.create(
+            document=self.document,
+            position=0,
+            article_ref="Artículo 54",
+            content=(
+                "Artículo 54. Recursos en proceso disciplinario. Contra la decisión sancionatoria "
+                "procede el recurso de reposición y en subsidio el de apelación dentro de los "
+                "cinco días hábiles siguientes a su notificación."
+            ),
+            embedding=[1.0, 0.0, 0.0],
+        )
+
+    def test_pregunta_fecha_dinamica_responde_sin_buscar_en_kb_ni_llamar_al_modelo(self):
+        """Criterio 2: si el usuario pregunta por fechas dinámicas del calendario,
+        el sistema aclara que solo maneja normas reglamentarias y no el calendario académico."""
+        with (
+            patch("knowledge.services.rag.retrieve") as mock_retrieve,
+            patch("knowledge.services.rag.generate_answer") as mock_generate,
+        ):
+            answer = rag.answer_question("¿Cuándo inician las clases en 2026?")
+
+        mock_retrieve.assert_not_called()
+        mock_generate.assert_not_called()
+        self.assertFalse(answer.grounded)
+        self.assertIn("solo gestiono normas", answer.content.lower())
+        self.assertIn("calendario académico", answer.content.lower())
+
+    def test_gherkin_consulta_plazo_disciplinario_cita_articulo_y_advierte_fechas(self):
+        """Gherkin scenario de US-17:
+        Given a student asks 'How many days do I have to appeal a disciplinary decision?'
+        When the system retrieves the information from the knowledge base
+        Then it provides the exact timeframe established in the regulation and warns that it does not manage specific calendar dates.
+        """
+        simulated_llm_response = (
+            "Para apelar una decisión disciplinaria dispones de cinco días hábiles "
+            "siguientes a su notificación (Artículo 54).\n\n"
+            "Ten en cuenta que EAFinder únicamente informa los plazos estipulados en el "
+            "Reglamento Académico y no gestiona fechas específicas del calendario académico."
+        )
+
+        with (
+            patch("knowledge.services.retriever.embed_query", return_value=[1.0, 0.0, 0.0]),
+            patch("knowledge.services.rag.generate_answer", return_value=simulated_llm_response) as mock_generate,
+        ):
+            answer = rag.answer_question("¿Cuántos días tengo para apelar una decisión disciplinaria?")
+
+        mock_generate.assert_called_once()
+        self.assertTrue(answer.grounded)
+        self.assertIn("Artículo 54", answer.content)
+        self.assertIn("cinco días hábiles", answer.content.lower())
+        self.assertIn("calendario académico", answer.content.lower())
+        self.assertEqual(answer.sources[0].chunk.article_ref, "Artículo 54")
+
+    def test_pregunta_fechas_dinamicas_no_registra_brecha_de_conocimiento(self):
+        """Las consultas sobre fechas del calendario son un caso fuera de alcance
+        manejado expresamente por US-17, por lo que no deben registrarse como brechas de conocimiento."""
+        from knowledge.models import KnowledgeGap
+
+        rag.answer_question("¿Cuándo inician las clases en 2026?")
+
+        self.assertFalse(
+            KnowledgeGap.objects.filter(query__icontains="inician las clases").exists()
+        )
+
+
+

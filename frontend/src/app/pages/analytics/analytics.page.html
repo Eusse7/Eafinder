@@ -1,0 +1,180 @@
+<section class="analytics-page">
+  <header class="analytics-header">
+    <div class="analytics-title-group">
+      <a routerLink="/" class="back-link" aria-label="Volver al inicio">
+        ← Volver
+      </a>
+      <h1>Panel de Analítica de Búsquedas</h1>
+      <p class="analytics-subtitle">
+        Métricas agregadas y patrones de consulta del asistente institucional (US05)
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="button-refresh"
+      (click)="loadData()"
+      [disabled]="loading()"
+      aria-label="Actualizar métricas"
+    >
+      {{ loading() ? 'Cargando…' : '↻ Actualizar' }}
+    </button>
+  </header>
+
+  @if (loading() && !data()) {
+    <div class="analytics-loading">
+      <p class="muted center">Cargando métricas de analítica…</p>
+    </div>
+  } @else if (error()) {
+    <div class="banner banner-error">
+      <p>No se pudieron cargar las métricas. Revisa la conexión con el backend.</p>
+      <button type="button" class="retry-btn" (click)="loadData()">Reintentar</button>
+    </div>
+  } @else if (data(); as stats) {
+    @if (!stats.has_data) {
+      <!-- Escenario 2: Sin datos registrados -->
+      <div class="analytics-empty-state">
+        <div class="empty-icon">📊</div>
+        <h2>Sin consultas registradas</h2>
+        <p class="muted">
+          Aún no existen preguntas registradas para calcular estadísticas.
+          El sistema muestra un estado vacío transparente sin generar métricas ficticias.
+        </p>
+        <a routerLink="/" class="primary-btn">Comenzar a consultar</a>
+      </div>
+    } @else {
+      <!-- Escenario 1: Visualización de métricas -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Total de consultas</span>
+          <span class="stat-value stat-primary">{{ stats.total_queries }}</span>
+          <span class="stat-desc">Preguntas procesadas</span>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-label">Conversaciones</span>
+          <span class="stat-value">{{ stats.total_chats }}</span>
+          <span class="stat-desc">Sesiones iniciadas</span>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-label">Satisfacción</span>
+          <span class="stat-value stat-success">
+            @if (stats.satisfaction_rate !== null) {
+              {{ stats.satisfaction_rate }}%
+            } @else {
+              N/A
+            }
+          </span>
+          <span class="stat-desc">
+            👍 {{ stats.feedback_up }} útiles · 👎 {{ stats.feedback_down }} no útiles
+          </span>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-label">Moderación de seguridad</span>
+          <span class="stat-value stat-warning">{{ stats.moderated_queries }}</span>
+          <span class="stat-desc">Consultas filtradas (US20)</span>
+        </div>
+      </div>
+
+      <!-- Temas frecuentes -->
+      <div class="analytics-section">
+        <h2>Temas más consultados</h2>
+        <p class="section-desc">Distribución porcentual de intenciones en las preguntas de los estudiantes.</p>
+
+        <div class="topics-list">
+          @for (item of stats.frequent_topics; track item.topic) {
+            <div class="topic-row">
+              <div class="topic-info">
+                <span class="topic-name">{{ item.topic }}</span>
+                <span class="topic-count">{{ item.count }} consultas ({{ item.percentage }}%)</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" [style.width.%]="item.percentage"></div>
+              </div>
+            </div>
+          } @empty {
+            <p class="muted">No hay temas identificados.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Brechas de conocimiento y alertas (US18) -->
+      @if (stats.knowledge_gaps; as gaps) {
+        <div class="analytics-section">
+          <div class="section-header-row">
+            <div>
+              <h2>Brechas de conocimiento y preguntas sin respuesta</h2>
+              <p class="section-desc">
+                Consultas que el chatbot no pudo fundamentar y requieren ampliar los documentos indexados (US18).
+              </p>
+            </div>
+            @if (gaps.has_alerts) {
+              <span class="gap-alert-badge">⚠️ Alerta de brechas recurrentes</span>
+            }
+          </div>
+
+          @if (gaps.recurring_gaps.length > 0) {
+            <div class="table-wrapper">
+              <table class="analytics-table">
+                <thead>
+                  <tr>
+                    <th>Pregunta consultada</th>
+                    <th class="text-center">Frecuencia</th>
+                    <th class="text-right">Similitud máx.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (gap of gaps.recurring_gaps; track gap.normalized_query) {
+                    <tr>
+                      <td>
+                        <span class="gap-query-text">{{ gap.query }}</span>
+                        @if (gap.is_recurring) {
+                          <span class="badge-recurring">Recurrente</span>
+                        }
+                      </td>
+                      <td class="text-center">
+                        <span class="badge-count">{{ gap.count }}</span>
+                      </td>
+                      <td class="text-right text-muted">
+                        {{ gap.avg_similarity }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="muted">No hay consultas sin respuesta registradas actualmente.</p>
+          }
+        </div>
+      }
+
+      <!-- Actividad diaria -->
+      @if (stats.daily_volume.length > 0) {
+        <div class="analytics-section">
+          <h2>Volumen reciente de consultas</h2>
+          <div class="table-wrapper">
+            <table class="analytics-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th class="text-right">Consultas</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (day of stats.daily_volume; track day.date) {
+                  <tr>
+                    <td>{{ day.date }}</td>
+                    <td class="text-right text-bold">{{ day.count }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+  }
+</section>
