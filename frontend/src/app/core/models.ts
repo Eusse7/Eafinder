@@ -63,6 +63,24 @@ export interface DailyVolume {
   count: number;
 }
 
+/** US18: reporte y alertas de brechas de conocimiento. */
+export interface KnowledgeGapItem {
+  query: string;
+  normalized_query: string;
+  count: number;
+  last_asked: string;
+  avg_similarity: number;
+  is_recurring: boolean;
+}
+
+export interface KnowledgeGapsReport {
+  has_gaps: boolean;
+  total_gaps: number;
+  pending_gaps: number;
+  has_alerts: boolean;
+  recurring_gaps: KnowledgeGapItem[];
+}
+
 export interface AnalyticsData {
   has_data: boolean;
   total_queries: number;
@@ -73,4 +91,6 @@ export interface AnalyticsData {
   moderated_queries: number;
   frequent_topics: TopicMetric[];
   daily_volume: DailyVolume[];
+  knowledge_gaps?: KnowledgeGapsReport;
 }
+

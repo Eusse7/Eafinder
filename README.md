@@ -157,8 +157,10 @@ se sustituyen por dobles de prueba, así que corren sin clave y sin costo.
 | US11 | Manejo de errores de conexión | `chats/views.py`, `knowledge/services/ai_provider.py`, `frontend/src/app/core/chat.store.ts` |
 | US12 | Carga de nuevos reglamentos | `knowledge/management/commands/ingest_document.py`, `knowledge/services/indexer.py` |
 | US13 | Actualización o eliminación de documentos obsoletos | opción `--retire-previous` en `ingest_document.py`, acciones en `knowledge/admin.py` |
+| US14 | Entrada de voz para consultas | `frontend/src/app/layout/composer.ts`, `frontend/src/styles.css` (Web Speech API) |
 | US15 | Valoración de la precisión de las respuestas | modelo `Message.feedback`, endpoint `set_feedback`, botones en `chat.page.html` |
 | US16 | Sugerencias de preguntas frecuentes | tarjetas interactivas en `frontend/src/app/pages/welcome/` |
+| US18 | Registro de consultas sin respuesta y alertas de brechas de conocimiento | modelo `KnowledgeGap`, `gap_tracker.py`, `knowledge/admin.py`, reporte en `/analytics` |
 | US20 | Filtro de seguridad y moderación de contenido sensible | `knowledge/services/moderation.py`, `rag.py`, `chats/models.py`, aviso en `chat.page.html` |
 
 ## Estructura

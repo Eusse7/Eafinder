@@ -103,11 +103,24 @@ def answer_question(question: str, history: list[dict] | None = None) -> Answer:
     retrieved = retrieve(question)
 
     if not retrieved:
+        from knowledge.models import KnowledgeGap
+        from .gap_tracker import record_gap
+
+        record_gap(question, reason=KnowledgeGap.Reason.EMPTY_KB, max_similarity=0.0)
         return Answer(content=EMPTY_KNOWLEDGE_BASE_MESSAGE, grounded=False)
 
+    max_score = max((item.score for item in retrieved), default=0.0)
     relevantes = [item for item in retrieved if item.score >= settings.RAG_MIN_RELEVANCE]
 
     if not relevantes:
+        from knowledge.models import KnowledgeGap
+        from .gap_tracker import record_gap
+
+        record_gap(
+            question,
+            reason=KnowledgeGap.Reason.LOW_RELEVANCE,
+            max_similarity=max_score,
+        )
         return Answer(content=NO_CONTEXT_MESSAGE, grounded=False)
 
     context = build_context(relevantes)

@@ -279,3 +279,22 @@ class ChatApiTests(TestCase):
         response = self.client.get("/admin/chats/chat/analytics/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Panel de Analítica de Búsquedas")
+
+    # US18: reporte y alertas de brechas de conocimiento ------------------
+
+    def test_endpoint_knowledge_gaps_report_devuelve_brechas(self):
+        from knowledge.services.gap_tracker import record_gap
+
+        record_gap("¿Dónde queda el bloque 38?", max_similarity=0.1)
+        record_gap("¿dónde queda el bloque 38?", max_similarity=0.12)
+
+        response = self.client.get("/api/chats/knowledge-gaps/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["has_gaps"])
+        self.assertEqual(data["total_gaps"], 2)
+        self.assertTrue(data["has_alerts"])
+        self.assertEqual(len(data["recurring_gaps"]), 1)
+        self.assertEqual(data["recurring_gaps"][0]["count"], 2)
+

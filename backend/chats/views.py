@@ -299,13 +299,15 @@ def _normalize_text(text: str) -> str:
 
 
 def get_analytics_data() -> dict:
-    """Calcula las métricas agregadas de consultas para US05."""
+    """Calcula las métricas agregadas de consultas para US05 y US18."""
     from django.db.models import Count
     from django.db.models.functions import TruncDate
+    from knowledge.services.gap_tracker import get_gap_report
 
     user_messages = Message.objects.filter(role=Message.Role.USER)
     total_queries = user_messages.count()
     total_chats = Chat.objects.count()
+    gap_data = get_gap_report()
 
     if total_queries == 0:
         return {
@@ -318,6 +320,7 @@ def get_analytics_data() -> dict:
             "moderated_queries": 0,
             "frequent_topics": [],
             "daily_volume": [],
+            "knowledge_gaps": gap_data,
         }
 
     # Temas frecuentes analizando el contenido de las preguntas
@@ -381,10 +384,19 @@ def get_analytics_data() -> dict:
         "moderated_queries": moderated_queries,
         "frequent_topics": frequent_topics,
         "daily_volume": daily_volume,
+        "knowledge_gaps": gap_data,
     }
 
 
 @api_view(["GET"])
 def analytics(request):
-    """Devuelve las métricas agregadas del panel de analítica de búsquedas (US05)."""
+    """Devuelve las métricas agregadas del panel de analítica de búsquedas (US05) y brechas (US18)."""
     return Response(get_analytics_data())
+
+
+@api_view(["GET"])
+def knowledge_gaps_report(request):
+    """Reporte de brechas de conocimiento y consultas sin respuesta (US18)."""
+    from knowledge.services.gap_tracker import get_gap_report
+
+    return Response(get_gap_report())

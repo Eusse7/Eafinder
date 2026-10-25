@@ -100,6 +100,57 @@
         </div>
       </div>
 
+      <!-- Brechas de conocimiento y alertas (US18) -->
+      @if (stats.knowledge_gaps; as gaps) {
+        <div class="analytics-section">
+          <div class="section-header-row">
+            <div>
+              <h2>Brechas de conocimiento y preguntas sin respuesta</h2>
+              <p class="section-desc">
+                Consultas que el chatbot no pudo fundamentar y requieren ampliar los documentos indexados (US18).
+              </p>
+            </div>
+            @if (gaps.has_alerts) {
+              <span class="gap-alert-badge">⚠️ Alerta de brechas recurrentes</span>
+            }
+          </div>
+
+          @if (gaps.recurring_gaps.length > 0) {
+            <div class="table-wrapper">
+              <table class="analytics-table">
+                <thead>
+                  <tr>
+                    <th>Pregunta consultada</th>
+                    <th class="text-center">Frecuencia</th>
+                    <th class="text-right">Similitud máx.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (gap of gaps.recurring_gaps; track gap.normalized_query) {
+                    <tr>
+                      <td>
+                        <span class="gap-query-text">{{ gap.query }}</span>
+                        @if (gap.is_recurring) {
+                          <span class="badge-recurring">Recurrente</span>
+                        }
+                      </td>
+                      <td class="text-center">
+                        <span class="badge-count">{{ gap.count }}</span>
+                      </td>
+                      <td class="text-right text-muted">
+                        {{ gap.avg_similarity }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="muted">No hay consultas sin respuesta registradas actualmente.</p>
+          }
+        </div>
+      }
+
       <!-- Actividad diaria -->
       @if (stats.daily_volume.length > 0) {
         <div class="analytics-section">

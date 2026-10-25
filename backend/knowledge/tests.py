@@ -321,3 +321,58 @@ class RespuestaGeminiTests(TestCase):
         from knowledge.services.ai_provider import _config_de_generacion
 
         self.assertNotIn("thinkingLevel", _config_de_generacion("gemini-3.6-flash"))
+
+
+class KnowledgeGapTests(TestCase):
+    """US18: Registro de consultas sin respuesta y alertas de brechas de conocimiento."""
+
+    def setUp(self):
+        self.document = Document.objects.create(
+            title="Reglamento Académico",
+            version="2025-1",
+        )
+        Chunk.objects.create(
+            document=self.document,
+            position=0,
+            article_ref="Artículo 1",
+            content="Disposiciones generales de pregrado.",
+            embedding=[1.0, 0.0, 0.0],
+        )
+
+    @override_settings(RAG_MIN_RELEVANCE=0.9)
+    def test_consulta_sin_contexto_registra_brecha(self):
+        """Escenario 1: si no hay respuesta grounded, se registra el evento para analizar la brecha."""
+        from knowledge.models import KnowledgeGap
+
+        with patch("knowledge.services.retriever.embed_query", return_value=[0.0, 0.0, 1.0]):
+            rag.answer_question("¿Cuánto cuesta la inscripción al gimnasio de EAFIT?")
+
+        brechas = KnowledgeGap.objects.filter(query__icontains="gimnasio")
+        self.assertTrue(brechas.exists())
+        brecha = brechas.first()
+        self.assertEqual(brecha.reason, KnowledgeGap.Reason.LOW_RELEVANCE)
+        self.assertEqual(brecha.status, KnowledgeGap.Status.PENDING)
+        self.assertIn("gimnasio", brecha.normalized_query)
+
+    def test_reporte_de_brechas_agrupa_consultas_recurrentes(self):
+        """Escenario 2: agrupa consultas repetidas y detecta alertas de brechas."""
+        from knowledge.models import KnowledgeGap
+        from knowledge.services.gap_tracker import get_gap_report, record_gap
+
+        # Registrar dos consultas similares sobre el mismo tema
+        record_gap("¿Cuánto cuesta el parqueadero?", max_similarity=0.2)
+        record_gap("¿cuanto cuesta el parqueadero?", max_similarity=0.25)
+        record_gap("¿Dónde queda la enfermería?", max_similarity=0.1)
+
+        report = get_gap_report()
+
+        self.assertTrue(report["has_gaps"])
+        self.assertEqual(report["total_gaps"], 3)
+        self.assertTrue(report["has_alerts"])
+
+        # La consulta recurrente debe tener count 2 y estar de primera
+        top_gap = report["recurring_gaps"][0]
+        self.assertIn("parqueadero", top_gap["query"].lower())
+        self.assertEqual(top_gap["count"], 2)
+        self.assertTrue(top_gap["is_recurring"])
+

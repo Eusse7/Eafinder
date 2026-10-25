@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
+from django.utils import timezone
 
-from .models import Chunk, Document
+from .models import Chunk, Document, KnowledgeGap
 from .services import indexer
 from .services.ai_provider import AIProviderError
 
@@ -55,3 +56,29 @@ class ChunkAdmin(admin.ModelAdmin):
     list_display = ("article_ref", "document", "position")
     list_filter = ("document",)
     search_fields = ("article_ref", "content")
+
+
+@admin.register(KnowledgeGap)
+class KnowledgeGapAdmin(admin.ModelAdmin):
+    """Panel de revisión de consultas sin respuesta y brechas de conocimiento (US18)."""
+
+    list_display = ("query", "reason", "max_similarity", "status", "created_at")
+    list_filter = ("status", "reason", "created_at")
+    search_fields = ("query", "normalized_query", "notes")
+    readonly_fields = ("created_at", "normalized_query")
+    actions = ["mark_as_reviewed", "mark_as_resolved", "mark_as_dismissed"]
+
+    @admin.action(description="Marcar como revisada")
+    def mark_as_reviewed(self, request, queryset):
+        total = queryset.update(status=KnowledgeGap.Status.REVIEWED, reviewed_at=timezone.now())
+        self.message_user(request, f"{total} brecha(s) marcada(s) como revisada(s).")
+
+    @admin.action(description="Marcar como resuelta (documento incorporado)")
+    def mark_as_resolved(self, request, queryset):
+        total = queryset.update(status=KnowledgeGap.Status.RESOLVED, reviewed_at=timezone.now())
+        self.message_user(request, f"{total} brecha(s) marcada(s) como resuelta(s).")
+
+    @admin.action(description="Descartar (fuera de alcance)")
+    def mark_as_dismissed(self, request, queryset):
+        total = queryset.update(status=KnowledgeGap.Status.DISMISSED, reviewed_at=timezone.now())
+        self.message_user(request, f"{total} brecha(s) descartada(s).")
