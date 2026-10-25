@@ -50,3 +50,27 @@ export interface Health {
   ai_provider: string;
   ai_configured: boolean;
 }
+
+/** US05: métricas del panel de analítica de búsquedas. */
+export interface TopicMetric {
+  topic: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DailyVolume {
+  date: string;
+  count: number;
+}
+
+export interface AnalyticsData {
+  has_data: boolean;
+  total_queries: number;
+  total_chats: number;
+  satisfaction_rate: number | null;
+  feedback_up: number;
+  feedback_down: number;
+  moderated_queries: number;
+  frequent_topics: TopicMetric[];
+  daily_volume: DailyVolume[];
+}

@@ -198,3 +198,84 @@ class ChatApiTests(TestCase):
             )
 
         self.assertFalse(response.json()["assistant_message"]["moderated"])
+
+    # US05: panel de analítica de búsquedas --------------------------------
+
+    def test_analytics_sin_consultas_muestra_estado_vacio(self):
+        """Escenario 2 de US05: sin datos registrados no se muestran métricas ficticias."""
+        response = self.client.get("/api/chats/analytics/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data["has_data"])
+        self.assertEqual(data["total_queries"], 0)
+        self.assertIsNone(data["satisfaction_rate"])
+        self.assertEqual(data["frequent_topics"], [])
+        self.assertEqual(data["daily_volume"], [])
+
+    def test_analytics_con_consultas_calcula_metricas_y_temas_frecuentes(self):
+        """Escenario 1 de US05: métricas de volumen, temas frecuentes y satisfacción."""
+        chat_id = self.crear_chat()
+        chat = Chat.objects.get(id=chat_id)
+
+        # Crear preguntas de distintos temas
+        m1 = Message.objects.create(
+            chat=chat,
+            role=Message.Role.USER,
+            content="¿Hasta cuándo puedo realizar la matrícula?",
+        )
+        a1 = Message.objects.create(
+            chat=chat,
+            role=Message.Role.ASSISTANT,
+            content="La matrícula se realiza según las fechas oficiales.",
+            feedback="up",
+        )
+        m2 = Message.objects.create(
+            chat=chat,
+            role=Message.Role.USER,
+            content="¿Cómo cancelo una asignatura?",
+        )
+        a2 = Message.objects.create(
+            chat=chat,
+            role=Message.Role.ASSISTANT,
+            content="Puedes cancelar hasta la semana octava.",
+            feedback="down",
+        )
+        m3 = Message.objects.create(
+            chat=chat,
+            role=Message.Role.USER,
+            content="¿En qué consiste la prueba académica y qué promedio exige?",
+        )
+
+        response = self.client.get("/api/chats/analytics/")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["has_data"])
+        self.assertEqual(data["total_queries"], 3)
+        self.assertEqual(data["total_chats"], 1)
+        self.assertEqual(data["feedback_up"], 1)
+        self.assertEqual(data["feedback_down"], 1)
+        self.assertEqual(data["satisfaction_rate"], 50.0)
+
+        # Verificar que se detectaron los temas frecuentes
+        temas_encontrados = {item["topic"]: item["count"] for item in data["frequent_topics"]}
+        self.assertIn("Matrícula e inscripción", temas_encontrados)
+        self.assertIn("Cancelación de asignaturas", temas_encontrados)
+        self.assertIn("Prueba académica y promedio", temas_encontrados)
+
+        # Volumen diario
+        self.assertTrue(len(data["daily_volume"]) >= 1)
+        self.assertEqual(data["daily_volume"][0]["count"], 3)
+
+    def test_admin_analytics_view_renderiza_panel(self):
+        from django.contrib.auth.models import User
+
+        User.objects.create_superuser(
+            username="admin", password="password", email="admin@test.com"
+        )
+        self.client.login(username="admin", password="password")
+
+        response = self.client.get("/admin/chats/chat/analytics/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Panel de Analítica de Búsquedas")

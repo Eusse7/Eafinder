@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    analytics,
     chat_exists,
     create_chat,
     create_message,
@@ -13,6 +14,7 @@ from .views import (
 urlpatterns = [
     path("", create_chat),
     path("health/", health),
+    path("analytics/", analytics),
     path("list/", get_chats),
     path("<uuid:chat_id>/messages/", create_message),
     path("<uuid:chat_id>/messages/<uuid:message_id>/feedback/", set_feedback),

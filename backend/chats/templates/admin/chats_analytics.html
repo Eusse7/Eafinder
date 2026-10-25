@@ -1,0 +1,111 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:chats_chat_changelist' %}">Chats</a>
+&rsaquo; Analítica de búsquedas
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" style="max-width: 1100px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h1 style="margin: 0; font-size: 1.6rem; color: #172554;">📊 Panel de Analítica de Búsquedas</h1>
+      <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.95rem;">
+        Métricas agregadas de consultas y patrones de uso (US05).
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'admin:chats_chat_changelist' %}" class="button" style="padding: 8px 14px; text-decoration: none;">&larr; Volver a Chats</a>
+    </div>
+  </div>
+
+  {% if not analytics.has_data %}
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 48px 24px; text-align: center; margin-top: 20px;">
+      <div style="font-size: 3rem; margin-bottom: 12px;">📈</div>
+      <h2 style="font-size: 1.3rem; color: #1e293b; margin: 0 0 8px 0;">No hay consultas registradas</h2>
+      <p style="color: #64748b; max-width: 500px; margin: 0 auto; line-height: 1.5;">
+        Aún no existen registros de consultas para calcular estadísticas. El sistema no muestra métricas ficticias.
+        Una vez los usuarios interactúen con EAFinder, las métricas agregadas y temas frecuentes se verán reflejados aquí automáticamente.
+      </p>
+    </div>
+  {% else %}
+    <!-- Tarjetas de métricas -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px;">
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Total Consultas</div>
+        <div style="font-size: 2.2rem; font-weight: 700; color: #1e3a8a; margin: 8px 0 4px 0;">{{ analytics.total_queries }}</div>
+        <div style="font-size: 0.85rem; color: #64748b;">Preguntas formuladas por usuarios</div>
+      </div>
+
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Conversaciones</div>
+        <div style="font-size: 2.2rem; font-weight: 700; color: #2563eb; margin: 8px 0 4px 0;">{{ analytics.total_chats }}</div>
+        <div style="font-size: 0.85rem; color: #64748b;">Sesiones de chat activas</div>
+      </div>
+
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Satisfacción</div>
+        <div style="font-size: 2.2rem; font-weight: 700; color: #059669; margin: 8px 0 4px 0;">
+          {% if analytics.satisfaction_rate != None %}{{ analytics.satisfaction_rate }}%{% else %}N/A{% endif %}
+        </div>
+        <div style="font-size: 0.85rem; color: #64748b;">
+          👍 {{ analytics.feedback_up }} útiles · 👎 {{ analytics.feedback_down }} no útiles
+        </div>
+      </div>
+
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Contenido Moderado</div>
+        <div style="font-size: 2.2rem; font-weight: 700; color: #d97706; margin: 8px 0 4px 0;">{{ analytics.moderated_queries }}</div>
+        <div style="font-size: 0.85rem; color: #64748b;">Consultas filtradas por seguridad (US20)</div>
+      </div>
+    </div>
+
+    <!-- Temas frecuentes -->
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <h2 style="font-size: 1.15rem; color: #1e293b; margin: 0 0 16px 0;">Temas Más Frecuentes</h2>
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for item in analytics.frequent_topics %}
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 6px;">
+              <span style="font-weight: 600; color: #1e293b;">{{ item.topic }}</span>
+              <span style="color: #64748b;">{{ item.count }} consultas ({{ item.percentage }}%)</span>
+            </div>
+            <div style="background: #f1f5f9; height: 10px; border-radius: 9999px; overflow: hidden;">
+              <div style="background: #2563eb; height: 100%; width: {{ item.percentage }}%; border-radius: 9999px;"></div>
+            </div>
+          </div>
+        {% empty %}
+          <p style="color: #64748b; margin: 0;">Sin temas registrados aún.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Historial de volumen diario -->
+    {% if analytics.daily_volume %}
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <h2 style="font-size: 1.15rem; color: #1e293b; margin: 0 0 16px 0;">Volumen de Consultas por Día</h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+          <thead>
+            <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; color: #64748b;">
+              <th style="padding: 10px 12px;">Fecha</th>
+              <th style="padding: 10px 12px; text-align: right;">Cantidad de Consultas</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in analytics.daily_volume %}
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 12px; color: #1e293b; font-weight: 500;">{{ row.date }}</td>
+                <td style="padding: 10px 12px; text-align: right; color: #2563eb; font-weight: 600;">{{ row.count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

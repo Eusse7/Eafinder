@@ -270,3 +270,121 @@ def health(request):
             "ai_configured": bool(settings.AI_API_KEY),
         }
     )
+
+
+# --------------------------------------------------------------------------
+# Panel de analítica de búsquedas (US05)
+# --------------------------------------------------------------------------
+
+TOPIC_KEYWORDS = {
+    "Matrícula e inscripción": ["matricul", "inscri", "admitid", "registro"],
+    "Cancelación de asignaturas": ["cancel", "retir"],
+    "Prueba académica y promedio": ["prueba", "promedio", "3.0", "sancion"],
+    "Requisitos y trámite de grado": ["grado", "gradua", "titulo", "diploma"],
+    "Homologación y convalidación": ["homolog", "validac", "convalid", "credito"],
+    "Calificaciones y reclamo de notas": ["nota", "calificac", "reclamo", "revision"],
+    "Exámenes y evaluaciones": ["examen", "parcial", "supletorio", "evaluac", "asistenc"],
+}
+
+
+def _normalize_text(text: str) -> str:
+    """Minúsculas y sin tildes para búsqueda de palabras clave."""
+    import re
+    import unicodedata
+
+    lowered = text.casefold()
+    decomposed = unicodedata.normalize("NFKD", lowered)
+    without_accents = "".join(c for c in decomposed if not unicodedata.combining(c))
+    return re.sub(r"\s+", " ", without_accents).strip()
+
+
+def get_analytics_data() -> dict:
+    """Calcula las métricas agregadas de consultas para US05."""
+    from django.db.models import Count
+    from django.db.models.functions import TruncDate
+
+    user_messages = Message.objects.filter(role=Message.Role.USER)
+    total_queries = user_messages.count()
+    total_chats = Chat.objects.count()
+
+    if total_queries == 0:
+        return {
+            "has_data": False,
+            "total_queries": 0,
+            "total_chats": total_chats,
+            "satisfaction_rate": None,
+            "feedback_up": 0,
+            "feedback_down": 0,
+            "moderated_queries": 0,
+            "frequent_topics": [],
+            "daily_volume": [],
+        }
+
+    # Temas frecuentes analizando el contenido de las preguntas
+    topic_counts = {name: 0 for name in TOPIC_KEYWORDS}
+    otros_count = 0
+
+    for msg in user_messages.values_list("content", flat=True):
+        normalized = _normalize_text(msg)
+        matched = False
+        for topic, keywords in TOPIC_KEYWORDS.items():
+            if any(kw in normalized for kw in keywords):
+                topic_counts[topic] += 1
+                matched = True
+        if not matched:
+            otros_count += 1
+
+    frequent_topics = []
+    for topic, count in topic_counts.items():
+        if count > 0:
+            percentage = round((count / total_queries) * 100, 1)
+            frequent_topics.append({"topic": topic, "count": count, "percentage": percentage})
+
+    if otros_count > 0:
+        frequent_topics.append({
+            "topic": "Otras consultas normativas",
+            "count": otros_count,
+            "percentage": round((otros_count / total_queries) * 100, 1),
+        })
+
+    frequent_topics.sort(key=lambda item: item["count"], reverse=True)
+
+    # Métricas de satisfacción (US15)
+    feedback_up = Message.objects.filter(feedback=Message.Feedback.UP).count()
+    feedback_down = Message.objects.filter(feedback=Message.Feedback.DOWN).count()
+    total_feedback = feedback_up + feedback_down
+    satisfaction_rate = (
+        round((feedback_up / total_feedback) * 100, 1) if total_feedback > 0 else None
+    )
+
+    moderated_queries = Message.objects.filter(moderated=True).count()
+
+    # Volumen diario (últimos 14 días con actividad)
+    daily_rows = (
+        user_messages.annotate(day=TruncDate("created_at"))
+        .values("day")
+        .annotate(count=Count("id"))
+        .order_by("-day")[:14]
+    )
+    daily_volume = [
+        {"date": row["day"].isoformat(), "count": row["count"]}
+        for row in reversed(list(daily_rows))
+    ]
+
+    return {
+        "has_data": True,
+        "total_queries": total_queries,
+        "total_chats": total_chats,
+        "satisfaction_rate": satisfaction_rate,
+        "feedback_up": feedback_up,
+        "feedback_down": feedback_down,
+        "moderated_queries": moderated_queries,
+        "frequent_topics": frequent_topics,
+        "daily_volume": daily_volume,
+    }
+
+
+@api_view(["GET"])
+def analytics(request):
+    """Devuelve las métricas agregadas del panel de analítica de búsquedas (US05)."""
+    return Response(get_analytics_data())

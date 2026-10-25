@@ -148,10 +148,18 @@ se sustituyen por dobles de prueba, así que corren sin clave y sin costo.
 | US02 | Entrenamiento y actualización de la base de conocimiento | `knowledge/management/commands/ingest_document.py`, `knowledge/admin.py` |
 | US03 | Acceso mediante interfaz centralizada | `frontend/src/app/pages/welcome/` |
 | US04 | Consulta de trámites del Reglamento Académico | prompt del sistema en `rag.py` |
+| US05 | Panel de analítica de búsquedas | `chats/views.py`, `chats/admin.py`, `frontend/src/app/pages/analytics/` |
 | US06 | Interfaz de chat responsiva para móvil, tableta y escritorio | `frontend/src/styles.css`, componentes de `layout/` y páginas |
+| US07 | Indicador de estado de procesamiento | `frontend/src/app/core/chat.store.ts`, `frontend/src/app/pages/chat/chat.page.html`, `styles.css` |
 | US08 | Procesamiento de consultas en lenguaje natural | `knowledge/services/retriever.py` |
 | US09 | Citación de fuentes institucionales | modelo `MessageSource`, chips de fuente en el chat |
-| US10 | Control de alucinación | umbral `RAG_MIN_RELEVANCE` en `rag.py` |
+| US10 | Control de alucinación y respuestas fuera de dominio | umbral `RAG_MIN_RELEVANCE` en `rag.py` |
+| US11 | Manejo de errores de conexión | `chats/views.py`, `knowledge/services/ai_provider.py`, `frontend/src/app/core/chat.store.ts` |
+| US12 | Carga de nuevos reglamentos | `knowledge/management/commands/ingest_document.py`, `knowledge/services/indexer.py` |
+| US13 | Actualización o eliminación de documentos obsoletos | opción `--retire-previous` en `ingest_document.py`, acciones en `knowledge/admin.py` |
+| US15 | Valoración de la precisión de las respuestas | modelo `Message.feedback`, endpoint `set_feedback`, botones en `chat.page.html` |
+| US16 | Sugerencias de preguntas frecuentes | tarjetas interactivas en `frontend/src/app/pages/welcome/` |
+| US20 | Filtro de seguridad y moderación de contenido sensible | `knowledge/services/moderation.py`, `rag.py`, `chats/models.py`, aviso en `chat.page.html` |
 
 ## Estructura
 

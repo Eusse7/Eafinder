@@ -61,6 +61,18 @@ import { ChatSummary } from '../core/models';
           }
         </div>
 
+        <div class="sidebar-nav">
+          <a
+            routerLink="/analytics"
+            routerLinkActive="sidebar-nav-active"
+            class="sidebar-nav-link"
+            (click)="onOpenChat()"
+            aria-label="Panel de analítica de búsquedas"
+          >
+            📊 Analítica de búsquedas
+          </a>
+        </div>
+
         <div class="sidebar-footer">
           <p>Universidad EAFIT · {{ year }}</p>
           <p class="muted small">Respuestas informativas. La interpretación oficial
