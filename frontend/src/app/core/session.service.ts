@@ -16,10 +16,27 @@ export class SessionService {
     let id = sessionStorage.getItem(SESSION_KEY);
 
     if (!id) {
-      id = crypto.randomUUID();
+      id = this.generateUUID();
       sessionStorage.setItem(SESSION_KEY, id);
     }
 
     return id;
+  }
+
+  /**
+   * Genera un UUID v4. Usa crypto.randomUUID() cuando está disponible
+   * (contextos seguros: HTTPS o localhost). En HTTP puro usa un fallback
+   * basado en Math.random(), suficiente para un identificador de sesión anónimo.
+   */
+  private generateUUID(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    // Fallback para contextos no-seguros (HTTP con IP directa)
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
   }
 }
