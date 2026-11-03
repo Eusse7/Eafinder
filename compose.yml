@@ -1,4 +1,4 @@
-services:
+﻿services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -46,7 +46,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "from urllib.request import Request, urlopen; urlopen(Request('http://127.0.0.1:8000/api/chats/health/', headers={'X-Forwarded-Proto': 'http'}), timeout=5)",
+          "from urllib.request import Request, urlopen; urlopen(Request('http://127.0.0.1:8000/api/chats/health/', headers={'X-Forwarded-Proto': 'https'}), timeout=5)",
         ]
       interval: 30s
       timeout: 10s
