@@ -26,6 +26,7 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-change-before-deploying}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
       DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+      DJANGO_SECURE_SSL_REDIRECT: ${DJANGO_SECURE_SSL_REDIRECT:-False}
       DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-}
       DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-}
@@ -34,6 +35,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev-only-change-before-deploying}
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
+      AI_PROVIDER: ${AI_PROVIDER:-gemini}
+      AI_API_KEY: ${AI_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy
@@ -43,7 +46,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "from urllib.request import Request, urlopen; urlopen(Request('http://127.0.0.1:8000/api/chats/health/', headers={'X-Forwarded-Proto': 'https'}), timeout=5)",
+          "from urllib.request import Request, urlopen; urlopen(Request('http://127.0.0.1:8000/api/chats/health/', headers={'X-Forwarded-Proto': 'http'}), timeout=5)",
         ]
       interval: 30s
       timeout: 10s
@@ -54,18 +57,16 @@ services:
     build:
       context: ./frontend
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:8080:80"
     depends_on:
       backend:
         condition: service_healthy
 
   caddy:
     image: caddy:2-alpine
-    profiles: ["production"]
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
