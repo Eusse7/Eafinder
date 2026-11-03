@@ -209,6 +209,16 @@ class IngestCommandTests(TestCase):
 class ReintentosTests(TestCase):
     """El adaptador aguanta los 429 del tier gratuito en vez de abortar."""
 
+    def test_api_key_ausente_indica_como_configurar_docker_compose(self):
+        from django.test import override_settings
+        from knowledge.services.ai_provider import AIProviderError, _api_key
+
+        with override_settings(AI_API_KEY=""), self.assertRaises(AIProviderError) as error:
+            _api_key()
+
+        self.assertIn(".env de la raíz", str(error.exception))
+        self.assertIn("--force-recreate backend", str(error.exception))
+
     def _respuesta(self, status_code, payload=None):
         import httpx
 
@@ -389,10 +399,125 @@ class DocumentAdminUploadTests(TestCase):
         self.client.login(username="admin_user", password="adminpassword")
 
     def test_upload_view_get_renderiza_formulario(self):
-        response = self.client.get("/admin/knowledge/document/upload/")
+        response = self.client.get("/gestion/documentos/")
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Carga de Nuevos Reglamentos (US12)")
+        self.assertContains(response, "Cuidemos lo que EAFinder sabe.")
         self.assertContains(response, 'type="file"')
+        self.assertContains(response, "Documentos recientes")
+        self.assertContains(response, "Indexar documento")
+
+    def test_upload_view_requiere_autenticacion_de_admin(self):
+        from django.test import Client
+
+        response = Client().get("/gestion/documentos/")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/gestion/ingresar/", response.url)
+
+    def test_usuario_sin_permisos_no_puede_abrir_el_panel(self):
+        from django.contrib.auth.models import User
+        from django.test import Client
+
+        User.objects.create_user(username="regular", password="regular-password")
+        client = Client()
+        client.login(username="regular", password="regular-password")
+
+        response = client.get("/gestion/documentos/")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_login_personal_rechaza_credenciales_invalidas(self):
+        from django.test import Client
+
+        response = Client().post(
+            "/gestion/ingresar/",
+            {
+                "username": "admin_user",
+                "password": "incorrect",
+                "next": "/gestion/documentos/",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Usuario o contraseña incorrectos")
+        self.assertContains(response, "Acceso de administrador")
+
+    def test_logout_personal_cierra_sesion(self):
+        response = self.client.post("/gestion/salir/")
+
+        self.assertRedirects(
+            response,
+            "/gestion/ingresar/",
+            fetch_redirect_response=False,
+        )
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_login_acepta_origen_local_con_verificacion_csrf(self):
+        from django.test import Client
+
+        self.admin_user.set_password("csrf-test-password")
+        self.admin_user.save()
+        csrf_client = Client(enforce_csrf_checks=True)
+        login_page = csrf_client.get(
+            "/gestion/ingresar/",
+            HTTP_HOST="localhost:8080",
+        )
+        csrf_token = csrf_client.cookies["csrftoken"].value
+
+        response = csrf_client.post(
+            "/admin/login/",
+            {
+                "username": "admin_user",
+                "password": "csrf-test-password",
+                "next": "/gestion/documentos/",
+                "csrfmiddlewaretoken": csrf_token,
+            },
+            HTTP_HOST="localhost:8080",
+            HTTP_ORIGIN="http://localhost:8080",
+            HTTP_REFERER="http://localhost:8080/gestion/ingresar/",
+        )
+
+        self.assertEqual(login_page.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/gestion/documentos/", response.url)
+
+    def test_login_personal_no_permite_redireccion_a_otro_dominio(self):
+        self.admin_user.set_password("safe-password")
+        self.admin_user.save()
+
+        response = self.client.post(
+            "/gestion/ingresar/",
+            {
+                "username": "admin_user",
+                "password": "safe-password",
+                "next": "https://evil.example/",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            "/gestion/documentos/",
+            fetch_redirect_response=False,
+        )
+
+    def test_upload_dashboard_muestra_documentos_recientes_y_estado(self):
+        Document.objects.create(
+            title="Reglamento vigente",
+            version="2026-1",
+            is_active=True,
+        )
+        Document.objects.create(
+            title="Reglamento anterior",
+            version="2025-1",
+            is_active=False,
+        )
+
+        response = self.client.get("/gestion/documentos/")
+
+        self.assertContains(response, "Reglamento vigente")
+        self.assertContains(response, "Reglamento anterior")
+        self.assertContains(response, "1 en uso", html=False)
+        self.assertContains(response, "Retirado")
 
     def test_upload_archivo_invalido_es_rechazado(self):
         """Escenario 2 de US12: si no cumple formato, se rechaza y se informa el motivo."""
@@ -402,7 +527,7 @@ class DocumentAdminUploadTests(TestCase):
         invalido = SimpleUploadedFile("virus.exe", b"binary content", content_type="application/octet-stream")
 
         response = self.client.post(
-            "/admin/knowledge/document/upload/",
+            "/gestion/documentos/",
             {
                 "file": invalido,
                 "title": "Reglamento No Válido",
@@ -423,7 +548,7 @@ class DocumentAdminUploadTests(TestCase):
 
         with patch("knowledge.services.indexer.embed_texts", return_value=[[1.0, 0.0, 0.0]]):
             response = self.client.post(
-                "/admin/knowledge/document/upload/",
+                "/gestion/documentos/",
                 {
                     "file": archivo,
                     "title": "Reglamento de Admisiones",
@@ -431,12 +556,74 @@ class DocumentAdminUploadTests(TestCase):
                 },
             )
 
-        self.assertEqual(response.status_code, 302)  # Redirige a changelist al completar
+        self.assertRedirects(
+            response,
+            "/gestion/documentos/",
+            fetch_redirect_response=False,
+        )
         doc = Document.objects.filter(title="Reglamento de Admisiones").first()
         self.assertIsNotNone(doc)
         self.assertEqual(doc.version, "2026-1")
         self.assertTrue(doc.is_active)
         self.assertEqual(doc.chunks.count(), 1)
+
+
+class BootstrapAdminCommandTests(TestCase):
+    def test_crea_administrador_desde_variables_de_entorno(self):
+        from django.contrib.auth import get_user_model
+        from django.core.management import call_command
+
+        with patch.dict(
+            "os.environ",
+            {
+                "DJANGO_SUPERUSER_USERNAME": "content_admin",
+                "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
+                "DJANGO_SUPERUSER_PASSWORD": "safe-test-password",
+            },
+            clear=True,
+        ):
+            call_command("bootstrap_admin")
+
+        admin_user = get_user_model().objects.get(username="content_admin")
+        self.assertTrue(admin_user.is_staff)
+        self.assertTrue(admin_user.is_superuser)
+        self.assertTrue(admin_user.check_password("safe-test-password"))
+
+    def test_actualiza_credenciales_del_administrador_existente(self):
+        from django.contrib.auth import get_user_model
+        from django.core.management import call_command
+
+        user_model = get_user_model()
+        user_model.objects.create_superuser(
+            username="content_admin",
+            email="old@example.com",
+            password="old-password",
+        )
+
+        with patch.dict(
+            "os.environ",
+            {
+                "DJANGO_SUPERUSER_USERNAME": "content_admin",
+                "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
+                "DJANGO_SUPERUSER_PASSWORD": "new-safe-password",
+            },
+            clear=True,
+        ):
+            call_command("bootstrap_admin")
+
+        admin_user = user_model.objects.get(username="content_admin")
+        self.assertEqual(admin_user.email, "admin@example.com")
+        self.assertTrue(admin_user.check_password("new-safe-password"))
+
+    def test_requiere_usuario_y_contrasena_juntos(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        with (
+            patch.dict("os.environ", {"DJANGO_SUPERUSER_USERNAME": "content_admin"}, clear=True),
+            self.assertRaises(CommandError),
+        ):
+            call_command("bootstrap_admin")
 
 
 class CalendarGuardTests(TestCase):
@@ -559,6 +746,3 @@ class US17RagTests(TestCase):
         self.assertFalse(
             KnowledgeGap.objects.filter(query__icontains="inician las clases").exists()
         )
-
-
-

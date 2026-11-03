@@ -37,8 +37,10 @@ def _api_key() -> str:
     key = settings.AI_API_KEY
     if not key:
         raise AIProviderError(
-            "No hay AI_API_KEY configurada. Copia backend/.env.example a "
-            "backend/.env y agrega tu clave del proveedor de IA."
+            "No hay AI_API_KEY configurada. Si usas Docker Compose, agrega "
+            "AI_API_KEY=tu_clave al archivo .env de la raíz del proyecto y "
+            "recrea el backend con `docker compose up -d --force-recreate backend`. "
+            "Si ejecutas Django directamente, configura backend/.env."
         )
     return key
 

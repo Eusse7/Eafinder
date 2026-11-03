@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
+    path("gestion/", include("knowledge.urls")),
     path("admin/", admin.site.urls),
     # Aquí van los urls propios de nuestro projecto
     path("api/chats/", include("chats.urls")),

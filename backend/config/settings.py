@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 from .cors import CORS_ALLOWED_ORIGINS  # noqa: F401
 
@@ -28,15 +29,39 @@ environ.Env.read_env(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env(
-    "DJANGO_SECRET_KEY",
-    default="django-insecure--y^+dei-k^bf62ru8^(5#y$gk#7zxfw*)um%r=wdk3x8y(+c0=",
-)
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DJANGO_DEBUG", default=True)
 
+SECRET_KEY = env(
+    "DJANGO_SECRET_KEY",
+    default=(
+        "django-insecure--y^+dei-k^bf62ru8^(5#y$gk#7zxfw*)um%r=wdk3x8y(+c0="
+        if DEBUG
+        else ""
+    ),
+)
+if not DEBUG and not SECRET_KEY:
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG=False.")
+if not DEBUG and SECRET_KEY == "dev-only-change-before-deploying":
+    raise ImproperlyConfigured("Replace the development DJANGO_SECRET_KEY before deployment.")
+
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+CSRF_TRUSTED_ORIGINS = env.list(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    default=(
+        ["http://localhost:8080", "http://127.0.0.1:8080"]
+        if DEBUG
+        else []
+    ),
+)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=not DEBUG)
+SECURE_HSTS_SECONDS = env.int(
+    "DJANGO_SECURE_HSTS_SECONDS",
+    default=0 if DEBUG else 31_536_000,
+)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 
 # Application definition
@@ -56,6 +81,12 @@ INSTALLED_APPS = [
     "knowledge",
 ]
 
+# La API de chat es anónima y no usa cookies de autenticación. Evita que una
+# sesión del portal de administración active la validación CSRF de DRF.
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+}
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -67,6 +98,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 ROOT_URLCONF = "config.urls"
 
@@ -97,6 +129,21 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+if env("POSTGRES_DB", default=""):
+    postgres_password = env("POSTGRES_PASSWORD")
+    if not DEBUG and postgres_password == "dev-only-change-before-deploying":
+        raise ImproperlyConfigured(
+            "Replace the development POSTGRES_PASSWORD before deployment."
+        )
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("POSTGRES_DB"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": postgres_password,
+        "HOST": env("POSTGRES_HOST", default="db"),
+        "PORT": env("POSTGRES_PORT", default="5432"),
+        "CONN_MAX_AGE": 60,
+    }
 
 
 # Password validation
@@ -134,16 +181,33 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+MAIL_BACKEND = env(
+    "DJANGO_MAIL_BACKEND",
+    default=(
+        "django.core.mail.backends.console.EmailBackend"
+        if DEBUG
+        else "django.core.mail.backends.smtp.EmailBackend"
+    ),
+)
+MAILERS = {"default": {"BACKEND": MAIL_BACKEND}}
+if MAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+    MAILERS["default"].update(
+        {
+            "HOST": env("EMAIL_HOST", default="localhost"),
+            "PORT": env.int("EMAIL_PORT", default=25),
+            "USERNAME": env("EMAIL_HOST_USER", default=""),
+            "PASSWORD": env("EMAIL_HOST_PASSWORD", default=""),
+            "USE_TLS": env.bool("EMAIL_USE_TLS", default=False),
+            "USE_SSL": env.bool("EMAIL_USE_SSL", default=False),
+            "TIMEOUT": env.int("EMAIL_TIMEOUT", default=10),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------

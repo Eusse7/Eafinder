@@ -108,6 +108,14 @@ import { ChatStore } from '../core/chat.store';
         Asistente especializado en los reglamentos y trámites de la
         <strong>Universidad EAFIT</strong>
       </p>
+      <a
+        class="composer-admin-link"
+        href="/gestion/documentos/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Administrar documentos
+      </a>
     </footer>
   `,
 })

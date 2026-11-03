@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101c3b" />
+    <title>Acceso de administración · EAFinder</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17213a;
+        --muted: #68748b;
+        --line: #e3e8f1;
+        --blue: #2458d3;
+        --navy: #101c3b;
+        font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        display: grid;
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        place-items: center;
+        padding: 28px 18px;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse at 50% 0, rgba(55, 105, 214, .13), transparent 34rem),
+          #f4f6fb;
+      }
+      .page { width: min(420px, 100%); }
+      .brand { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 25px; }
+      .brand-mark {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border-radius: 14px;
+        color: white;
+        background: linear-gradient(145deg, #4779e4, #234cae);
+        box-shadow: 0 7px 16px rgba(36, 82, 184, .2);
+      }
+      .brand-mark svg { width: 23px; height: 23px; }
+      .brand-name { color: var(--navy); font-size: 18px; font-weight: 800; letter-spacing: -.03em; }
+      .brand-subtitle { margin-top: 2px; color: var(--muted); font-size: 12px; }
+      .card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 19px;
+        background: white;
+        box-shadow: 0 16px 48px rgba(21, 37, 73, .09);
+      }
+      .card-top { height: 5px; background: linear-gradient(90deg, #315fce, #76a3ff); }
+      .card-body { padding: 30px; }
+      .lock {
+        display: grid;
+        width: 46px;
+        height: 46px;
+        margin-bottom: 18px;
+        place-items: center;
+        border: 1px solid #e4eafb;
+        border-radius: 14px;
+        color: var(--blue);
+        background: #f2f6ff;
+      }
+      .lock svg { width: 22px; height: 22px; }
+      h1 { margin: 0; font-size: 24px; letter-spacing: -.04em; }
+      .intro { margin: 8px 0 23px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+      .error {
+        margin: 0 0 17px;
+        padding: 11px 12px;
+        border: 1px solid #f1d2d5;
+        border-radius: 10px;
+        color: #a52736;
+        background: #fff5f5;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .field { margin-bottom: 16px; }
+      label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 700; }
+      input {
+        display: block;
+        width: 100%;
+        min-height: 45px;
+        padding: 10px 12px;
+        border: 1px solid #dce2ec;
+        border-radius: 10px;
+        outline: none;
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+        font-size: 14px;
+        transition: border-color .15s, box-shadow .15s;
+      }
+      input:focus { border-color: #7094e5; box-shadow: 0 0 0 3px rgba(52, 101, 209, .12); }
+      .submit {
+        display: flex;
+        width: 100%;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        margin-top: 8px;
+        border: 0;
+        border-radius: 10px;
+        color: white;
+        background: linear-gradient(135deg, #315fce, #214aa9);
+        box-shadow: 0 5px 12px rgba(36, 82, 184, .2);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .submit:hover { filter: brightness(1.05); }
+      .submit svg { width: 17px; height: 17px; }
+      .security-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        margin-top: 18px;
+        padding: 12px;
+        border: 1px solid #e8edf5;
+        border-radius: 10px;
+        color: #66748c;
+        background: #fafbfe;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+      .security-note svg { flex: 0 0 16px; width: 16px; height: 16px; color: #5273ba; }
+      .back { display: block; margin-top: 20px; color: #61708a; font-size: 12px; font-weight: 600; text-align: center; text-decoration: none; }
+      .back:hover { color: var(--blue); }
+      .footer { margin-top: 23px; color: #8993a5; font-size: 11px; text-align: center; }
+      @media (max-width: 480px) { .card-body { padding: 23px; } }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M5 4.75A1.75 1.75 0 0 1 6.75 3H20v15H7a2 2 0 0 0-2 2V4.75Z" stroke="white" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M5 19.5A1.5 1.5 0 0 1 6.5 18H20M9 7h7M9 10h7" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">EAFinder</div>
+          <div class="brand-subtitle">Administración de documentos</div>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="card-top"></div>
+        <div class="card-body">
+          <div class="lock" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="5" y="10" width="14" height="11" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h1>Acceso de administrador</h1>
+          <p class="intro">Inicia sesión con las credenciales autorizadas para actualizar los documentos que consulta EAFinder.</p>
+
+          {% if error %}
+            <div class="error" role="alert">{{ error }}</div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}" />
+            <div class="field">
+              <label for="id_username">Usuario</label>
+              <input id="id_username" name="username" type="text" autocomplete="username" required autofocus />
+            </div>
+            <div class="field">
+              <label for="id_password">Contraseña</label>
+              <input id="id_password" name="password" type="password" autocomplete="current-password" required />
+            </div>
+            <button class="submit" type="submit">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M10 17l5-5-5-5M15 12H4m8-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Ingresar al centro de documentos
+            </button>
+          </form>
+
+          <div class="security-note">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3 19 6v5c0 4.7-2.9 8-7 10-4.1-2-7-5.3-7-10V6l7-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>El acceso está limitado a la cuenta administradora configurada para este sistema.</span>
+          </div>
+        </div>
+      </section>
+
+      <a class="back" href="/">← Volver al asistente</a>
+      <div class="footer">Universidad EAFIT · Acceso restringido</div>
+    </main>
+  </body>
+</html>

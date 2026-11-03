@@ -19,3 +19,8 @@ httpx==0.28.1
 # Extracción de texto de los documentos institucionales
 pypdf==6.18.1
 python-docx==1.2.0
+
+# Servidor de aplicación, archivos estáticos y conexión a PostgreSQL
+gunicorn==23.0.0
+psycopg[binary]==3.2.13
+whitenoise==6.9.0
