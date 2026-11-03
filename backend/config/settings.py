@@ -81,12 +81,6 @@ INSTALLED_APPS = [
     "knowledge",
 ]
 
-# La API de chat es anónima y no usa cookies de autenticación. Evita que una
-# sesión del portal de administración active la validación CSRF de DRF.
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
-}
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

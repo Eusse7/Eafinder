@@ -19,7 +19,9 @@ import { SessionService } from './session.service';
 export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly session = inject(SessionService);
-  private readonly base = `${environment.apiUrl}/api/chats`;
+  private readonly base = environment.production
+    ? '/api/chats'
+    : `${environment.apiUrl}/api/chats`;
 
   health(): Observable<Health> {
     return this.http.get<Health>(`${this.base}/health/`);

@@ -81,28 +81,6 @@ class ChatApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
 
-    def test_api_chat_no_requiere_csrf_por_cookie_de_admin(self):
-        from django.contrib.auth import get_user_model
-        from django.test import Client
-
-        admin_user = get_user_model().objects.create_superuser(
-            username="chat-admin",
-            email="admin@example.com",
-            password="test-password",
-        )
-        client = Client(enforce_csrf_checks=True)
-        client.force_login(admin_user)
-
-        response = client.post(
-            "/api/chats/",
-            {"session_id": self.session_id},
-            content_type="application/json",
-            HTTP_ORIGIN="http://testserver",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("id", response.json())
-
     def test_borrar_chat(self):
         chat_id = self.crear_chat()
 
@@ -319,3 +297,4 @@ class ChatApiTests(TestCase):
         self.assertTrue(data["has_alerts"])
         self.assertEqual(len(data["recurring_gaps"]), 1)
         self.assertEqual(data["recurring_gaps"][0]["count"], 2)
+

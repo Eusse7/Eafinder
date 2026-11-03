@@ -18,8 +18,8 @@
 
   @if (!store.backendOnline()) {
     <p class="banner banner-error">
-      No se pudo conectar con el backend. Verifica que Django esté corriendo en
-      <code>http://localhost:8000</code>.
+      No se pudo conectar con el servicio de EAFinder. Comprueba que el servidor
+      esté disponible e inténtalo de nuevo.
     </p>
   } @else if (store.knowledgeBaseEmpty()) {
     <p class="banner banner-warning">
